@@ -20,7 +20,7 @@ export default function Home() {
           🍽️ TableLink
         </h1>
         <p className="mt-1 text-sm text-customer-text-secondary">
-          หน้านี้ใช้จำลองการ "สแกน QR ประจำโต๊ะ" ระหว่างพัฒนา
+          หน้านี้ใช้จำลองการ สแกน QR ประจำโต๊ะ ระหว่างพัฒนา
         </p>
       </header>
 
