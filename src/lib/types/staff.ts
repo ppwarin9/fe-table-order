@@ -1,4 +1,4 @@
-import { ID } from '@/lib/types/common';
+import type { ID } from '@/lib/types/common';
 
 export type RoleCode = 'owner' | 'manager' | 'staff';
 

@@ -1,4 +1,4 @@
-import { ID, Satang } from '@/lib/types/common';
+import type { ID, Satang } from '@/lib/types/common';
 
 export type OrderRoundStatus = 'submitted' | 'completed';
 export type OrderItemStatus = 'pending' | 'cooking' | 'served';

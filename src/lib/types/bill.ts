@@ -1,5 +1,5 @@
-import { ID, Satang } from '@/lib/types/common';
-import { SplitMethod } from '@/lib/types/store';
+import type { ID, Satang } from '@/lib/types/common';
+import type { SplitMethod } from '@/lib/types/store';
 
 export type BillStatus = 'open' | 'settled' | 'void';
 export type BillShareStatus = 'unpaid' | 'partially_paid';

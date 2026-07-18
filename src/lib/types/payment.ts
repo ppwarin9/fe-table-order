@@ -1,4 +1,4 @@
-import { ID, Satang } from '@/lib/types/common';
+import type { ID, Satang } from '@/lib/types/common';
 
 export type PaymentMethodCode = 'promptpay' | 'cash';
 export type PaymentStatus = 'pending' | 'notified' | 'confirmed' | 'failed';

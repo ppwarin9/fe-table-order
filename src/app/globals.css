@@ -1,26 +1,31 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* token กลางแบบ shadcn (สี oklch) */
+  --background: oklch(0.985 0.003 106); /* ขาวอุ่น */
+  --foreground: oklch(0.24 0.01 258);
+  --card: oklch(1 0 0);
+  --primary: oklch(0.715 0.2 150.6); /* เขียว LINE #06C755 */
+  --accent: oklch(0.965 0.028 155); /* tint เขียวอ่อน */
+  --destructive: oklch(0.62 0.2 22);
+  --border: oklch(0.932 0.004 120);
+  --radius: 0.625rem;
+  /* + secondary / muted / ring / input … ครบชุด — ดูไฟล์จริง (มี .dark ด้วย) */
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  /* ผูก token → utility class */
+  --font-sans:
+    var(--font-plex-thai), 'IBM Plex Sans Thai', 'Anuphan', sans-serif;
+  --color-primary: var(--primary); /* ← ได้คลาส bg-primary / text-primary */
+  --color-card: var(--card);
+  --color-border: var(--border);
+  --radius-lg: var(--radius); /* rounded-lg = 10px ตาม design-system */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* ชื่อเดิมจาก design-system.md ยังใช้ได้ — map เข้า token กลาง */
+  --color-customer-primary: var(--primary);
+  --color-customer-text-secondary: var(--muted-foreground);
+  --color-admin-bg: #f7f8fa;
+  /* … customer-* / admin-* ที่เหลือทำนองเดียวกัน */
 }

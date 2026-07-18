@@ -1,4 +1,4 @@
-import { StaffUser } from '@/lib/types';
+import type { StaffUser } from '@/lib/types';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 

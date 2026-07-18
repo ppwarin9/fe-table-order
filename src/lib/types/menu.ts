@@ -1,4 +1,4 @@
-import { ID, Satang } from '@/lib/types/common';
+import type { ID, Satang } from '@/lib/types/common';
 
 export interface MenuCategory {
   id: ID;
