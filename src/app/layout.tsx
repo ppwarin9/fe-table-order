@@ -1,8 +1,9 @@
 import { IBM_Plex_Sans_Thai, Geist } from 'next/font/google';
 import './globals.css';
-import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils';
+import { Providers } from '@/app/providers';
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+const geist = Geist({ subsets: ['latin'], variable: '--font-sans' });
 
 const plexThai = IBM_Plex_Sans_Thai({
   variable: '--font-plex-thai',
@@ -14,9 +15,18 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="th" className={cn("h-full", "antialiased", plexThai.variable, "font-sans", geist.variable)}>
+    <html
+      lang="th"
+      className={cn(
+        'h-full',
+        'antialiased',
+        plexThai.variable,
+        'font-sans',
+        geist.variable,
+      )}
+    >
       <body className={`${plexThai.className} min-h-full flex flex-col`}>
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
