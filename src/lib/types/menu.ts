@@ -19,28 +19,3 @@ export interface MenuItem {
   estimatedCookingMinutes: number;
   isAvailable: boolean;
 }
-
-export interface ModifierGroup {
-  id: ID;
-  storeId: ID;
-  name: string;
-  isRequired: boolean;
-  maxSelect: number;
-}
-
-export interface ModifierOption {
-  id: ID;
-  modifierGroupId: ID;
-  name: string;
-  priceDelta: Satang;
-  isActive: boolean;
-}
-
-export interface MenuItemModifierGroup {
-  menuItemId: ID;
-  modifierGroupId: ID;
-}
-
-export interface MenuItemDetail extends MenuItem {
-  modifierGroups: (ModifierGroup & { option: ModifierOption[] })[];
-}

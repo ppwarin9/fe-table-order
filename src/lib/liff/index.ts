@@ -1,3 +1,5 @@
-import * as mock from '@/lib/liff/mock';
+import * as realLiff from './real';
+import * as mockLiff from './mock';
 
-export const liff = mock;
+const isDev = process.env.NODE_ENV === 'development';
+export const liffService = isDev ? mockLiff : realLiff;

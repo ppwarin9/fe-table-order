@@ -25,21 +25,12 @@ export interface OrderItem {
   estimatedMinutes: number;
 }
 
-export interface OrderItemModifier {
-  id: ID;
-  orderItemId: ID;
-  modifierOptionId: ID;
-  nameSnapshot: string;
-  priceDeltaSnapshot: Satang;
-}
-
 export interface OrderItemSharer {
   orderItemId: ID;
   sessionMemberId: ID;
 }
 
 export interface OrderItemView extends OrderItem {
-  modifiers: OrderItemModifier[];
   addedByName: string;
 }
 

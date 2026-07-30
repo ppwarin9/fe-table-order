@@ -1,46 +1,57 @@
-// Landing (dev): จำลองการสแกน QR ประจำโต๊ะ + ลิงก์เข้าหลังบ้าน
 'use client';
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { api } from '@/lib/api';
-import type { DiningTable } from '@/lib/types';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { QrCode } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 export default function Home() {
-  const [tables, setTables] = useState<DiningTable[]>([]);
+  const router = useRouter();
+  const [qrToken, setQrToken] = useState('');
 
-  useEffect(() => {
-    api.getTables().then(setTables);
-  }, []);
+  const handleGo = () => {
+    const trimmed = qrToken.trim();
+    if (!trimmed) return;
+    router.push(`/join?t=${encodeURIComponent(trimmed)}`);
+  };
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-6 bg-customer-bg p-6">
-      <header className="pt-8 text-center">
-        <h1 className="text-2xl font-bold text-customer-text-primary">
-          🍽️ TableLink
-        </h1>
-        <p className="mt-1 text-sm text-customer-text-secondary">
-          หน้านี้ใช้จำลองการ สแกน QR ประจำโต๊ะ ระหว่างพัฒนา
-        </p>
-      </header>
+    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col items-center justify-center gap-6 bg-customer-bg p-6 text-center">
+      <div className="flex size-24 items-center justify-center rounded-full bg-customer-tint text-customer-primary-dark">
+        <QrCode className="size-12" strokeWidth={1.5} />
+      </div>
 
-      <section>
-        <div className="grid grid-cols-4 gap-2">
-          {tables.map((table) => (
-            <Link
-              key={table.id}
-              href={`/join?t=${table.qrToken}`}
-              className="flex aspect-square flex-col items-center justify-center rounded-xl border border-customer-border bg-white active:bg-customer-tint"
-            >
-              <span className="text-xl">🪑</span>
-              <span className="text-sm font-semibold text-customer-text-primary">
-                {table.tableNumber}
-              </span>
-            </Link>
-          ))}
+      <div className="flex flex-col gap-2">
+        <h1 className="text-2xl font-bold text-customer-text-primary">
+          🍽️ ยินดีต้อนรับสู่ TableLink
+        </h1>
+        <p className="text-[15px] leading-relaxed text-customer-text-secondary">
+          กรุณาสแกน QR Code ที่โต๊ะของคุณ
+          <br />
+          เพื่อเข้าร่วมและสั่งอาหารได้เลย!!
+        </p>
+      </div>
+
+      {process.env.NODE_ENV === 'development' && (
+        <div className="w-full text-left">
+          <p className="mb-2 text-xs font-semibold text-customer-text-secondary">
+            [DEV] กรอก qrToken เพื่อทดสอบ
+          </p>
+          <div className="flex gap-2">
+            <Input
+              value={qrToken}
+              onChange={(e) => setQrToken(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleGo()}
+              placeholder="วาง qrToken ที่นี่"
+              className="flex-1"
+            />
+            <Button onClick={handleGo} disabled={!qrToken.trim()}>
+              ไป
+            </Button>
+          </div>
         </div>
-      </section>
-      {/* ลิงก์ 🔐 เข้าระบบหลังบ้าน — เพิ่มท้ายไฟล์ได้เลย มีผลตอน Slice 9 */}
+      )}
     </div>
   );
 }

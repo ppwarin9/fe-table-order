@@ -7,4 +7,3 @@ export * from '@/lib/types/cart';
 export * from '@/lib/types/order';
 export * from '@/lib/types/bill';
 export * from '@/lib/types/payment';
-export * from '@/lib/types/promotion';
