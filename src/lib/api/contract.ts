@@ -1,4 +1,9 @@
-import type { DiningTable, MenuCategory, MenuItem } from '@/lib/types';
+import type {
+  DiningTable,
+  MenuCategory,
+  MenuItem,
+  StaffUser,
+} from '@/lib/types';
 import type { ID } from '@/lib/types/common';
 
 export interface SessionInfo {
@@ -21,6 +26,16 @@ export interface JoinTableResult {
   sessionToken: string;
   tableNumber: string;
   member: { id: ID; displayName: string; pictureUrl: string };
+}
+
+export interface LoginInput {
+  email: string;
+  password: string;
+}
+
+export interface LoginResult {
+  token: string;
+  staff: StaffUser;
 }
 
 export interface ApiClient {

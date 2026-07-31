@@ -10,7 +10,6 @@ export interface Role {
 
 export interface StaffUser {
   id: ID;
-  storeId: ID;
   roleId: ID;
   email: string;
   name: string;
