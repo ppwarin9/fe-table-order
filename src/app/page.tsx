@@ -5,25 +5,43 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { QrCode } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { liffService } from '@/lib/liff';
+
+// `liff.state` shows up in two different shapes depending on which redirect this is:
+//  - Initial launch from the bare QR URL (https://liff.line.me/<liffId>?t=<token>):
+//    `liff.state=?t=<token>` — just the original query string.
+//  - After the LINE login OAuth round-trip: `liff.state=/join?t=<token>&liff.hback=2` —
+//    a full path+query, because that's what the URL looked like when liff.login() was
+//    triggered (from /join's needsLogin screen). In this second case `code`/`state`
+//    (LINE's OAuth params) are also present on this exact URL, and liff.init() MUST run
+//    here — on the page that actually has them — to complete the token exchange, before
+//    navigating away and losing them.
+function resolveLiffTarget(searchParams: URLSearchParams): string | null {
+  const liffState = searchParams.get('liff.state');
+  if (liffState) {
+    if (liffState.startsWith('/')) return liffState;
+    const t = new URLSearchParams(liffState.replace(/^\?/, '')).get('t');
+    return t ? `/join?t=${encodeURIComponent(t)}` : null;
+  }
+  const t = searchParams.get('t');
+  return t ? `/join?t=${encodeURIComponent(t)}` : null;
+}
 
 function HomeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [qrToken, setQrToken] = useState('');
 
-  // The QR-code URL is a bare LIFF URL (https://liff.line.me/<liffId>?t=<qrToken>) with
-  // no sub-path. After the LINE login redirect, LIFF's OWN mechanism for preserving that
-  // query string shows up as `?liff.state=<url-encoded-original-query>` (e.g.
-  // `?liff.state=%3Ft%3D<token>` decodes to `?t=<token>`) — normally `liff.init()`
-  // rewrites this back to a plain `?t=...` once it runs, but this root page never calls
-  // liff.init() (only the (customer) route group's layout does, and `/` sits outside
-  // it), so that rewrite never happens and a plain `t` param never appears. Parsing
-  // `liff.state` directly here avoids depending on liff.init() running at all.
   useEffect(() => {
-    const liffState = searchParams.get('liff.state');
-    const t = liffState ? new URLSearchParams(liffState.replace(/^\?/, '')).get('t') : searchParams.get('t');
-    if (t) {
-      router.replace(`/join?t=${encodeURIComponent(t)}`);
+    const target = resolveLiffTarget(searchParams);
+    if (!target) return;
+
+    if (searchParams.get('code')) {
+      // Post-login OAuth callback — let liff.init() consume `code`/`state` from this
+      // exact URL first, so the login handshake actually completes.
+      liffService.init().finally(() => router.replace(target));
+    } else {
+      router.replace(target);
     }
   }, [searchParams, router]);
 
