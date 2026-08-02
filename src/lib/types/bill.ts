@@ -22,13 +22,6 @@ export interface Bill {
   settledAt: string | null;
 }
 
-export interface BillDiscount {
-  id: ID;
-  billId: ID;
-  promotionId: ID;
-  amountSnapshot: Satang;
-}
-
 export interface BillShare {
   id: ID;
   billId: ID;
@@ -50,5 +43,4 @@ export interface BillShareView extends BillShare {
 export interface BillDetail {
   bill: Bill;
   shares: BillShareView[];
-  discounts: BillDiscount[];
 }

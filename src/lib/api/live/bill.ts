@@ -114,7 +114,6 @@ function mapBill(bill: BackendBill): BillDetail {
       settledAt: bill.settledAt,
     },
     shares: bill.billShares.map(mapShare),
-    discounts: [],
   };
 }
 
