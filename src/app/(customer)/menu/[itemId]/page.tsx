@@ -113,7 +113,7 @@ export default function MenuItemDetailPage() {
         </div>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 mx-auto w-full max-w-md border-t border-border bg-background p-4">
+      <div className="fixed inset-x-0 bottom-16 mx-auto w-full max-w-md border-t border-border bg-background p-4">
         <Button
           className="w-full"
           size="lg"
