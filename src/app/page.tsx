@@ -12,12 +12,16 @@ function HomeContent() {
   const [qrToken, setQrToken] = useState('');
 
   // The QR-code URL is a bare LIFF URL (https://liff.line.me/<liffId>?t=<qrToken>) with
-  // no sub-path — LINE only reliably forwards the query string to the registered
-  // Endpoint URL (the site root), never a path segment appended after the LIFF ID. So
-  // this root page is the actual landing spot after a scan, and immediately forwards to
-  // /join itself instead of relying on LIFF to route straight there.
+  // no sub-path. After the LINE login redirect, LIFF's OWN mechanism for preserving that
+  // query string shows up as `?liff.state=<url-encoded-original-query>` (e.g.
+  // `?liff.state=%3Ft%3D<token>` decodes to `?t=<token>`) — normally `liff.init()`
+  // rewrites this back to a plain `?t=...` once it runs, but this root page never calls
+  // liff.init() (only the (customer) route group's layout does, and `/` sits outside
+  // it), so that rewrite never happens and a plain `t` param never appears. Parsing
+  // `liff.state` directly here avoids depending on liff.init() running at all.
   useEffect(() => {
-    const t = searchParams.get('t');
+    const liffState = searchParams.get('liff.state');
+    const t = liffState ? new URLSearchParams(liffState.replace(/^\?/, '')).get('t') : searchParams.get('t');
     if (t) {
       router.replace(`/join?t=${encodeURIComponent(t)}`);
     }
