@@ -69,10 +69,10 @@ function TablesContent() {
 
   // Must be a liff.line.me URL, not a raw Vercel URL — only a LIFF URL launches the page
   // inside the real LIFF context (isInClient() true, liff.login()'s redirect round-trip
-  // works). LINE resolves this to `<LIFF app's Endpoint URL>/join?t=<qrToken>`, so the
-  // Endpoint URL registered in the LINE Developers Console must be the site's root
-  // (e.g. https://fe-table-order.vercel.app), never a sub-path like /menu.
-  const joinUrl = (qrToken: string) => `https://liff.line.me/${env.NEXT_PUBLIC_LIFF_ID}/join?t=${qrToken}`;
+  // works). Deliberately no /join sub-path here — LINE only reliably forwards the query
+  // string to the registered Endpoint URL (the site root), not an appended path. The
+  // root page (src/app/page.tsx) reads `t` itself and forwards to /join client-side.
+  const joinUrl = (qrToken: string) => `https://liff.line.me/${env.NEXT_PUBLIC_LIFF_ID}?t=${qrToken}`;
 
   return (
     <div className="flex flex-col gap-4">

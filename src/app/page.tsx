@@ -1,14 +1,27 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { QrCode } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
-export default function Home() {
+function HomeContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [qrToken, setQrToken] = useState('');
+
+  // The QR-code URL is a bare LIFF URL (https://liff.line.me/<liffId>?t=<qrToken>) with
+  // no sub-path — LINE only reliably forwards the query string to the registered
+  // Endpoint URL (the site root), never a path segment appended after the LIFF ID. So
+  // this root page is the actual landing spot after a scan, and immediately forwards to
+  // /join itself instead of relying on LIFF to route straight there.
+  useEffect(() => {
+    const t = searchParams.get('t');
+    if (t) {
+      router.replace(`/join?t=${encodeURIComponent(t)}`);
+    }
+  }, [searchParams, router]);
 
   const handleGo = () => {
     const trimmed = qrToken.trim();
@@ -53,5 +66,14 @@ export default function Home() {
         </div>
       )}
     </div>
+  );
+}
+
+// useSearchParams requires a Suspense boundary.
+export default function Home() {
+  return (
+    <Suspense fallback={null}>
+      <HomeContent />
+    </Suspense>
   );
 }
