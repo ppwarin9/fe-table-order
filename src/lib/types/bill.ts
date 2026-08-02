@@ -2,7 +2,7 @@ import type { ID, Satang } from '@/lib/types/common';
 import type { SplitMethod } from '@/lib/types/store';
 
 export type BillStatus = 'open' | 'settled' | 'void';
-export type BillShareStatus = 'unpaid' | 'partially_paid';
+export type BillShareStatus = 'unpaid' | 'paid';
 
 export interface Bill {
   id: ID;
@@ -31,7 +31,7 @@ export interface BillDiscount {
 
 export interface BillShare {
   id: ID;
-  billID: ID;
+  billId: ID;
   sessionMemberId: ID;
   amountDue: Satang;
   status: BillShareStatus;
@@ -41,6 +41,10 @@ export interface BillShareView extends BillShare {
   memberName: string;
   memberPicture: string;
   paidAmount: Satang;
+  // No endpoint reads a share's in-flight PENDING/NOTIFIED payment status independent of
+  // creating/notifying it yourself — this is overlaid locally right after notifying
+  // (see useBill) until the next getBill() shows the share as PAID.
+  notified?: boolean;
 }
 
 export interface BillDetail {

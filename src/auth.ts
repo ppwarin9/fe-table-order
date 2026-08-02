@@ -1,10 +1,16 @@
 import { loginAndFetchProfile } from '@/lib/api/live/auth';
+import { ADMIN_LOGIN_PATH } from '@/lib/routes';
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: 'jwt' },
-  pages: { signIn: '/admin/login' },
+  pages: { signIn: ADMIN_LOGIN_PATH },
+  // Required on Vercel: the platform proxies through a load balancer, so Auth.js can't
+  // otherwise trust the incoming Host header to build correct callback/cookie URLs
+  // across production + preview deployments. Safe here since Vercel's edge is the only
+  // thing that can set that header for traffic reaching this app.
+  trustHost: true,
   providers: [
     Credentials({
       credentials: {

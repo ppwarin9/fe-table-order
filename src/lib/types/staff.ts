@@ -1,6 +1,8 @@
 import type { ID } from '@/lib/types/common';
 
-export type RoleCode = 'owner' | 'manager' | 'staff';
+// Fixed 3-tier hierarchy on the backend (SUPERADMIN > ADMIN > STAFF) — admin/roles only
+// supports reading the list and renaming a role's display `name`, the set is closed.
+export type RoleCode = 'SUPERADMIN' | 'ADMIN' | 'STAFF';
 
 export interface Role {
   id: ID;

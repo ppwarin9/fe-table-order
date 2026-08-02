@@ -19,3 +19,9 @@ export interface MenuItem {
   estimatedCookingMinutes: number;
   isAvailable: boolean;
 }
+
+// Backend has no modifier-group/option system at all — modifierGroups is always [],
+// kept only so item-detail UI has a stable (empty) shape to render against.
+export interface MenuItemDetail extends MenuItem {
+  modifierGroups: never[];
+}

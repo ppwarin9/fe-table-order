@@ -8,7 +8,8 @@ export interface Store {
   updatedAt: string;
 }
 
-export type SplitMethod = 'equal' | 'itemized' | 'single_payer';
+// The backend only ever supports these two (see BillModule) — no itemized split exists.
+export type SplitMethod = 'equal' | 'single_payer';
 
 export interface StoreSetting {
   id: ID;

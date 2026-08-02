@@ -13,7 +13,7 @@ export type SessionStatus = 'open' | 'closed';
 
 export interface TableSession {
   id: ID;
-  dinningTableId: ID;
+  diningTableId: ID;
   status: SessionStatus;
   openedAt: string;
   closedAt: string | null;

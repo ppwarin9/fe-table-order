@@ -18,7 +18,7 @@ export interface OrderItem {
   addedBy: ID;
   quantity: number;
   unitPriceSnapshot: Satang;
-  nameSnapShot: string;
+  nameSnapshot: string;
   note: string;
   status: OrderItemStatus;
   startedAt: string | null;
