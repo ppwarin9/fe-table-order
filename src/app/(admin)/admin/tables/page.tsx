@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { env } from '@/config/env';
 
 export default function AdminTablesPage() {
   return (
@@ -66,8 +67,12 @@ function TablesContent() {
     }
   };
 
-  const joinUrl = (qrToken: string) =>
-    typeof window !== 'undefined' ? `${window.location.origin}/join?t=${qrToken}` : `/join?t=${qrToken}`;
+  // Must be a liff.line.me URL, not a raw Vercel URL — only a LIFF URL launches the page
+  // inside the real LIFF context (isInClient() true, liff.login()'s redirect round-trip
+  // works). LINE resolves this to `<LIFF app's Endpoint URL>/join?t=<qrToken>`, so the
+  // Endpoint URL registered in the LINE Developers Console must be the site's root
+  // (e.g. https://fe-table-order.vercel.app), never a sub-path like /menu.
+  const joinUrl = (qrToken: string) => `https://liff.line.me/${env.NEXT_PUBLIC_LIFF_ID}/join?t=${qrToken}`;
 
   return (
     <div className="flex flex-col gap-4">
