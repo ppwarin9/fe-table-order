@@ -1,10 +1,12 @@
 'use client';
 
 import { useOrders } from '@/hooks/useOrders';
+import { useCountdown } from '@/hooks/useCountdown';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { formatTHB } from '@/lib/billing/money';
-import type { OrderItemStatus } from '@/lib/types';
+import { cn } from '@/lib/utils';
+import type { OrderItemStatus, OrderItemView } from '@/lib/types';
 
 const STATUS_LABEL: Record<OrderItemStatus, string> = {
   pending: 'รอคิว',
@@ -17,6 +19,18 @@ const STATUS_VARIANT: Record<OrderItemStatus, 'secondary' | 'default'> = {
   cooking: 'default',
   served: 'secondary',
 };
+
+function CookingCountdown({ item }: { item: OrderItemView }) {
+  const { label, remainingSeconds, done } = useCountdown(item.startedAt, item.estimatedMinutes);
+
+  if (item.status !== 'cooking') return null;
+  if (done) return <span className="text-xs font-medium text-amber-600">ใกล้เสร็จแล้ว...</span>;
+  return (
+    <span className={cn('font-mono text-xs font-semibold tabular-nums', remainingSeconds <= 60 && 'text-amber-600')}>
+      ⏱ {label}
+    </span>
+  );
+}
 
 export default function OrdersPage() {
   const { rounds, loading, error } = useOrders();
@@ -61,7 +75,10 @@ export default function OrdersPage() {
                   </p>
                   {item.note && <p className="text-xs text-muted-foreground">หมายเหตุ: {item.note}</p>}
                 </div>
-                <Badge variant={STATUS_VARIANT[item.status]}>{STATUS_LABEL[item.status]}</Badge>
+                <div className="flex flex-col items-end gap-1">
+                  <Badge variant={STATUS_VARIANT[item.status]}>{STATUS_LABEL[item.status]}</Badge>
+                  <CookingCountdown item={item} />
+                </div>
               </div>
             ))}
           </div>
