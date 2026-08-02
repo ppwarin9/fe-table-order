@@ -20,7 +20,12 @@ liffHttp.interceptors.response.use(
   (response) => response,
   (error) => {
     const appError = normalizeAxiosError(error);
-    if (appError.status === 401) {
+    // A 401 from the join call itself means the idToken was invalid/expired — that's
+    // not "this table session got closed" (there's no session yet to clear), so the
+    // join page handles that case itself with a LINE re-login prompt instead of being
+    // redirected here.
+    const isJoinRequest = typeof error?.config?.url === 'string' && error.config.url.includes('/table-sessions/join');
+    if (appError.status === 401 && !isJoinRequest) {
       useSessionStore.getState().clear();
       if (typeof window !== 'undefined') {
         window.location.assign('/closed');
