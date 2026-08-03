@@ -10,7 +10,6 @@ export interface Bill {
   status: BillStatus;
   splitMethod: SplitMethod;
   subtotal: Satang;
-  discountAmount: Satang;
   serviceChargeRateSnapshot: number;
   serviceChargeAmount: Satang;
   vatRateSnapshot: number;

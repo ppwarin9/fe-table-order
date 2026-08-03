@@ -55,7 +55,6 @@ interface BackendBill {
   status: BackendBillStatus;
   splitMethod: BackendSplitMethod;
   subtotal: number;
-  discountAmount: number;
   serviceChargeRateSnapshot: number;
   serviceChargeAmount: number;
   vatRateSnapShot: number;
@@ -102,7 +101,6 @@ function mapBill(bill: BackendBill): BillDetail {
       status: BILL_STATUS_FROM_BACKEND[bill.status],
       splitMethod: SPLIT_METHOD_FROM_BACKEND[bill.splitMethod],
       subtotal: bill.subtotal,
-      discountAmount: bill.discountAmount,
       serviceChargeRateSnapshot: bill.serviceChargeRateSnapshot,
       serviceChargeAmount: bill.serviceChargeAmount,
       vatRateSnapshot: bill.vatRateSnapShot,
