@@ -60,17 +60,6 @@ export interface PaymentView {
   status: PaymentStatus;
 }
 
-// ---- admin ----
-export interface LoginInput {
-  email: string;
-  password: string;
-}
-
-export interface LoginResult {
-  token: string;
-  staff: StaffUser;
-}
-
 // ---- admin: staff & roles ----
 export interface CreateStaffUserInput {
   email: string;
@@ -173,12 +162,9 @@ export interface ApiClient {
   createPayment(billShareId: ID, method: PaymentMethodCode): Promise<PaymentView>;
   notifyPayment(paymentId: ID): Promise<void>;
 
-  // admin: auth
-  login(input: LoginInput): Promise<LoginResult>;
-
-  // admin: staff & roles (SUPERADMIN only)
+  // admin: staff & roles — create/update(role)/delete are SUPERADMIN-only;
+  // list/read/password-reset are ADMIN-or-above (see staff.ts for the split)
   getStaffUsers(): Promise<StaffUser[]>;
-  getStaffUser(staffId: ID): Promise<StaffUser>;
   createStaffUser(input: CreateStaffUserInput): Promise<StaffUser>;
   updateStaffUser(staffId: ID, input: Partial<Omit<StaffUser, 'id'>>): Promise<StaffUser>;
   deleteStaffUser(staffId: ID): Promise<StaffUser>;

@@ -1,4 +1,3 @@
-import type { LoginInput, LoginResult } from '@/lib/api/contract';
 import { adminHttp } from '@/lib/api/live/http/adminHttp';
 
 interface BackendLoginResponse {
@@ -42,22 +41,5 @@ export async function loginAndFetchProfile(
     name: login.user.name,
     role: me.role,
     accessToken: login.accessToken,
-  };
-}
-
-export async function login({
-  email,
-  password,
-}: LoginInput): Promise<LoginResult> {
-  const profile = await loginAndFetchProfile(email, password);
-  return {
-    token: profile.accessToken,
-    staff: {
-      id: profile.id,
-      email: profile.email,
-      name: profile.name,
-      roleId: profile.role,
-      isActive: true,
-    },
   };
 }

@@ -10,13 +10,3 @@ export const formatTHB = (satang: Satang): string =>
     currency: 'THB',
     currencyDisplay: 'symbol',
   }).format(satangToBaht(satang));
-
-export const splitEvenly = (total: Satang, parts: number): Satang[] => {
-  if (parts <= 0) return [];
-  const base = Math.floor(total / parts);
-  const remainder = total - base * parts;
-  return Array.from(
-    { length: parts },
-    (_, i) => base + (i < remainder ? 1 : 0),
-  );
-};

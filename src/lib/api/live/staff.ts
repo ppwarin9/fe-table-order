@@ -12,11 +12,6 @@ export async function getStaffUsers(): Promise<StaffUser[]> {
   return data;
 }
 
-export async function getStaffUser(staffId: ID): Promise<StaffUser> {
-  const { data } = await adminHttp.get<StaffUser>(`/admin/staff-user/${staffId}`);
-  return data;
-}
-
 export async function createStaffUser(input: CreateStaffUserInput): Promise<StaffUser> {
   const { data } = await adminHttp.post<StaffUser>('/admin/staff-user', input);
   return data;
