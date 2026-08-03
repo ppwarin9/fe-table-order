@@ -182,6 +182,8 @@ export interface ApiClient {
   createStaffUser(input: CreateStaffUserInput): Promise<StaffUser>;
   updateStaffUser(staffId: ID, input: Partial<Omit<StaffUser, 'id'>>): Promise<StaffUser>;
   deleteStaffUser(staffId: ID): Promise<StaffUser>;
+  changeOwnPassword(input: { currentPassword: string; newPassword: string }): Promise<StaffUser>;
+  resetStaffPassword(staffId: ID, newPassword: string): Promise<StaffUser>;
   getRoles(): Promise<Role[]>;
   updateRole(roleId: ID, name: string): Promise<Role>;
 

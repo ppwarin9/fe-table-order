@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { toast } from 'sonner';
 import {
   LayoutDashboard,
   ChefHat,
@@ -12,17 +14,22 @@ import {
   Settings,
   Users,
   LogOut,
+  KeyRound,
 } from 'lucide-react';
 import { signOut, useSession } from 'next-auth/react';
 import { cn } from '@/lib/utils';
 import { ADMIN_LOGIN_PATH } from '@/lib/routes';
 import { useAdminOrderQueue } from '@/hooks/queries/useAdminOrderQueue';
+import { useChangeOwnPassword } from '@/hooks/mutations/useAdminStaffMutations';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface NavLink {
   href: string;
   label: string;
   icon: typeof LayoutDashboard;
-  superAdminOnly?: boolean;
+  adminOnly?: boolean;
 }
 
 const links: NavLink[] = [
@@ -33,8 +40,8 @@ const links: NavLink[] = [
   { href: '/admin/menu', label: 'เมนูอาหาร', icon: UtensilsCrossed },
   { href: '/admin/reports', label: 'รายงานยอดขาย', icon: ChartColumnIncreasing },
   { href: '/admin/settings', label: 'ตั้งค่าร้าน', icon: Settings },
-  // SUPERADMIN only — filtered below by session.user.role.
-  { href: '/admin/staff', label: 'พนักงาน', icon: Users, superAdminOnly: true },
+  // ADMIN-or-above only — filtered below by session.user.role.
+  { href: '/admin/staff', label: 'พนักงาน', icon: Users, adminOnly: true },
 ];
 
 export function Sidebar() {
@@ -43,6 +50,24 @@ export function Sidebar() {
   const staffName = session?.user?.name ?? '—';
   const staffEmail = session?.user?.email ?? '';
   const handleSignOut = () => signOut({ callbackUrl: ADMIN_LOGIN_PATH });
+
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const changePassword = useChangeOwnPassword();
+
+  const handleChangePassword = async () => {
+    if (newPassword.length < 8) return;
+    try {
+      await changePassword.mutateAsync({ currentPassword, newPassword });
+      toast.success('เปลี่ยนรหัสผ่านแล้ว');
+      setPasswordDialogOpen(false);
+      setCurrentPassword('');
+      setNewPassword('');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'เปลี่ยนรหัสผ่านไม่สำเร็จ');
+    }
+  };
 
   // Active (not-yet-served) queue count — badged on the orders link, same idea as the
   // customer bottom nav's cart/orders dots.
@@ -63,7 +88,7 @@ export function Sidebar() {
       </div>
       <nav className="flex-1 space-y-0.5 overflow-y-auto p-2">
         {links
-          .filter((link) => !link.superAdminOnly || session?.user?.role === 'SUPERADMIN')
+          .filter((link) => !link.adminOnly || session?.user?.role !== 'STAFF')
           .map((link) => {
             const active = link.href === '/admin' ? pathname === '/admin' : pathname.startsWith(link.href);
             const Icon = link.icon;
@@ -99,6 +124,14 @@ export function Sidebar() {
           <p className="truncate text-xs text-muted-foreground">{staffEmail}</p>
         </div>
         <button
+          onClick={() => setPasswordDialogOpen(true)}
+          aria-label="เปลี่ยนรหัสผ่าน"
+          title="เปลี่ยนรหัสผ่าน"
+          className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        >
+          <KeyRound className="size-4" />
+        </button>
+        <button
           onClick={handleSignOut}
           aria-label="ออกจากระบบ"
           title="ออกจากระบบ"
@@ -107,6 +140,47 @@ export function Sidebar() {
           <LogOut className="size-4" />
         </button>
       </div>
+
+      <Dialog
+        open={passwordDialogOpen}
+        onOpenChange={(open) => {
+          setPasswordDialogOpen(open);
+          if (!open) {
+            setCurrentPassword('');
+            setNewPassword('');
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>เปลี่ยนรหัสผ่าน</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium">รหัสผ่านปัจจุบัน</label>
+              <Input
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium">รหัสผ่านใหม่ (อย่างน้อย 8 ตัวอักษร)</label>
+              <Input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+              />
+            </div>
+            <Button
+              onClick={handleChangePassword}
+              disabled={!currentPassword || newPassword.length < 8 || changePassword.isPending}
+            >
+              {changePassword.isPending ? 'กำลังบันทึก...' : 'เปลี่ยนรหัสผ่าน'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </aside>
   );
 }

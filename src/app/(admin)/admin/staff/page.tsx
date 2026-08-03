@@ -7,6 +7,7 @@ import { useAdminRoles, useAdminStaffUsers } from '@/hooks/queries/useAdminStaff
 import {
   useCreateStaffUser,
   useDeleteStaffUser,
+  useResetStaffPassword,
   useUpdateRole,
   useUpdateStaffUser,
 } from '@/hooks/mutations/useAdminStaffMutations';
@@ -36,28 +37,32 @@ type Tab = 'staff' | 'roles';
 
 export default function AdminStaffPage() {
   return (
-    <RequireRole role="SUPERADMIN">
+    <RequireRole role="ADMIN">
       <StaffPageContent />
     </RequireRole>
   );
 }
 
 function StaffPageContent() {
+  const { data: session } = useSession();
+  const isSuperAdmin = session?.user?.role === 'SUPERADMIN';
   const [tab, setTab] = useState<Tab>('staff');
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">พนักงานและสิทธิ์</h1>
-        <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
-          <TabsList>
-            <TabsTrigger value="staff">พนักงาน</TabsTrigger>
-            <TabsTrigger value="roles">สิทธิ์ (Role)</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        {isSuperAdmin && (
+          <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
+            <TabsList>
+              <TabsTrigger value="staff">พนักงาน</TabsTrigger>
+              <TabsTrigger value="roles">สิทธิ์ (Role)</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        )}
       </div>
 
-      {tab === 'staff' ? <StaffTab /> : <RolesTab />}
+      {tab === 'staff' || !isSuperAdmin ? <StaffTab isSuperAdmin={isSuperAdmin} /> : <RolesTab />}
     </div>
   );
 }
@@ -68,17 +73,20 @@ const ROLE_VARIANT: Record<string, 'destructive' | 'default' | 'secondary'> = {
   STAFF: 'secondary',
 };
 
-function StaffTab() {
+function StaffTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
   const { data: session } = useSession();
   const staffQuery = useAdminStaffUsers();
   const rolesQuery = useAdminRoles();
   const createStaff = useCreateStaffUser();
   const updateStaff = useUpdateStaffUser();
   const deleteStaff = useDeleteStaffUser();
+  const resetPassword = useResetStaffPassword();
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingStaff, setEditingStaff] = useState<StaffUser | null>(null);
   const [deletingStaff, setDeletingStaff] = useState<StaffUser | null>(null);
+  const [resettingStaff, setResettingStaff] = useState<StaffUser | null>(null);
+  const [resetValue, setResetValue] = useState('');
 
   const staffList = staffQuery.data ?? [];
   const roles = rolesQuery.data ?? [];
@@ -139,11 +147,29 @@ function StaffTab() {
     }
   };
 
+  const handleResetPassword = async () => {
+    if (!resettingStaff || resetValue.length < 8) return;
+    try {
+      await resetPassword.mutateAsync({ id: resettingStaff.id, newPassword: resetValue });
+      toast.success(`รีเซ็ตรหัสผ่านของ "${resettingStaff.name}" แล้ว`);
+      setResettingStaff(null);
+      setResetValue('');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'รีเซ็ตรหัสผ่านไม่สำเร็จ');
+    }
+  };
+
+  // ADMIN callers may only reset STAFF-role accounts (enforced server-side too).
+  const canResetPassword = (staff: StaffUser) =>
+    staff.id !== myId && (isSuperAdmin || roleCode(staff.roleId) === 'STAFF');
+
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex justify-end">
-        <Button onClick={openCreate}>+ เพิ่มพนักงาน</Button>
-      </div>
+      {isSuperAdmin && (
+        <div className="flex justify-end">
+          <Button onClick={openCreate}>+ เพิ่มพนักงาน</Button>
+        </div>
+      )}
 
       {staffQuery.isPending ? (
         <div className="flex flex-col gap-2">
@@ -176,23 +202,32 @@ function StaffTab() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <Switch
-                    checked={staff.isActive}
-                    disabled={isMe || updateStaff.isPending}
-                    onCheckedChange={(v) => handleToggleActive(staff, v)}
-                  />
-                  <Button variant="secondary" size="sm" onClick={() => openEdit(staff)}>
-                    แก้ไข
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    disabled={isMe}
-                    title={isMe ? 'ลบบัญชีตัวเองไม่ได้' : undefined}
-                    onClick={() => setDeletingStaff(staff)}
-                  >
-                    ลบ
-                  </Button>
+                  {canResetPassword(staff) && (
+                    <Button variant="outline" size="sm" onClick={() => setResettingStaff(staff)}>
+                      รีเซ็ตรหัสผ่าน
+                    </Button>
+                  )}
+                  {isSuperAdmin && (
+                    <>
+                      <Switch
+                        checked={staff.isActive}
+                        disabled={isMe || updateStaff.isPending}
+                        onCheckedChange={(v) => handleToggleActive(staff, v)}
+                      />
+                      <Button variant="secondary" size="sm" onClick={() => openEdit(staff)}>
+                        แก้ไข
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        disabled={isMe}
+                        title={isMe ? 'ลบบัญชีตัวเองไม่ได้' : undefined}
+                        onClick={() => setDeletingStaff(staff)}
+                      >
+                        ลบ
+                      </Button>
+                    </>
+                  )}
                 </div>
               </li>
             );
@@ -229,6 +264,38 @@ function StaffTab() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog
+        open={!!resettingStaff}
+        onOpenChange={(open) => {
+          if (!open) {
+            setResettingStaff(null);
+            setResetValue('');
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>รีเซ็ตรหัสผ่าน: {resettingStaff?.name ?? ''}</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium">รหัสผ่านใหม่ (อย่างน้อย 8 ตัวอักษร)</label>
+              <Input
+                type="password"
+                value={resetValue}
+                onChange={(e) => setResetValue(e.target.value)}
+              />
+            </div>
+            <Button
+              onClick={handleResetPassword}
+              disabled={resetValue.length < 8 || resetPassword.isPending}
+            >
+              {resetPassword.isPending ? 'กำลังบันทึก...' : 'รีเซ็ตรหัสผ่าน'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

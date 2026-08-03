@@ -1,5 +1,7 @@
-// Real admin staff/role surface — SUPERADMIN only per backend's RolesGuard hierarchy.
-// Response fields match StaffUser/Role exactly (flat, same casing) — no mapping needed.
+// Real admin staff/role surface. Create/update(role)/delete are SUPERADMIN-only; list/
+// read/password-reset are ADMIN-or-above (ADMIN only sees/resets STAFF-role accounts —
+// enforced server-side, see StaffUserService). Response fields match StaffUser/Role
+// exactly (flat, same casing) — no mapping needed.
 import type { ID } from '@/lib/types/common';
 import type { Role, StaffUser } from '@/lib/types';
 import type { CreateStaffUserInput } from '../contract';
@@ -31,6 +33,24 @@ export async function updateStaffUser(
 // Soft-delete — backend returns the now-inactive staff user, not void.
 export async function deleteStaffUser(staffId: ID): Promise<StaffUser> {
   const { data } = await adminHttp.delete<StaffUser>(`/admin/staff-user/${staffId}`);
+  return data;
+}
+
+// Self-service — changes the logged-in staff user's own password.
+export async function changeOwnPassword(input: {
+  currentPassword: string;
+  newPassword: string;
+}): Promise<StaffUser> {
+  const { data } = await adminHttp.patch<StaffUser>('/auth/change-password', input);
+  return data;
+}
+
+// Administrative reset of another staff user's password — no current-password check.
+// SUPERADMIN may target anyone; ADMIN may only target STAFF-role accounts (403 otherwise).
+export async function resetStaffPassword(staffId: ID, newPassword: string): Promise<StaffUser> {
+  const { data } = await adminHttp.patch<StaffUser>(`/admin/staff-user/${staffId}/password`, {
+    newPassword,
+  });
   return data;
 }
 

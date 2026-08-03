@@ -40,6 +40,18 @@ export function useDeleteStaffUser() {
   });
 }
 
+export function useChangeOwnPassword() {
+  return useMutation<StaffUser, AppError, { currentPassword: string; newPassword: string }>({
+    mutationFn: (input) => api.changeOwnPassword(input),
+  });
+}
+
+export function useResetStaffPassword() {
+  return useMutation<StaffUser, AppError, { id: ID; newPassword: string }>({
+    mutationFn: ({ id, newPassword }) => api.resetStaffPassword(id, newPassword),
+  });
+}
+
 export function useUpdateRole() {
   const invalidate = useInvalidateRoles();
   return useMutation<Role, AppError, { id: ID; name: string }>({
