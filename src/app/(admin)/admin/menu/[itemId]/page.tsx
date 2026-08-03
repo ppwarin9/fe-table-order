@@ -7,6 +7,7 @@ import { useUpdateMenuItem } from '@/hooks/mutations/useMenuItemMutations';
 import { RequireRole } from '@/components/admin/RequireRole';
 import { MenuForm, type MenuFormValues } from '@/components/admin/MenuForm';
 import { Skeleton } from '@/components/ui/skeleton';
+import { QueryErrorState } from '@/components/shared/QueryErrorState';
 import { ADMIN_MENU_PATH } from '@/lib/routes';
 
 export default function AdminMenuEditPage() {
@@ -20,7 +21,7 @@ export default function AdminMenuEditPage() {
 function MenuEditContent() {
   const { itemId } = useParams<{ itemId: string }>();
   const router = useRouter();
-  const { data: item, isPending, error } = useAdminMenuItem(itemId);
+  const { data: item, isPending, error, refetch } = useAdminMenuItem(itemId);
   const updateMenuItem = useUpdateMenuItem();
 
   const handleSubmit = async (values: MenuFormValues) => {
@@ -34,7 +35,7 @@ function MenuEditContent() {
   };
 
   if (error) {
-    return <p className="text-sm text-destructive">{error.message}</p>;
+    return <QueryErrorState message={error.message} onRetry={() => refetch()} />;
   }
 
   if (isPending || !item) {

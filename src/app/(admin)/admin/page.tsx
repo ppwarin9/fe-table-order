@@ -10,6 +10,7 @@ import { RequireRole } from '@/components/admin/RequireRole';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { QueryErrorState } from '@/components/shared/QueryErrorState';
 import { cn } from '@/lib/utils';
 import type { ActiveSessionView } from '@/lib/api/contract';
 
@@ -69,7 +70,7 @@ function DashboardContent() {
   const waitMinutes = estimateWaitMinutes(queueQuery.data ?? []);
 
   if (sessionsQuery.error) {
-    return <p className="text-sm text-destructive">{sessionsQuery.error.message}</p>;
+    return <QueryErrorState message={sessionsQuery.error.message} onRetry={() => sessionsQuery.refetch()} />;
   }
 
   return (

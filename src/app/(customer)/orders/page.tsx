@@ -4,6 +4,7 @@ import { useOrders } from '@/hooks/useOrders';
 import { useCountdown } from '@/hooks/useCountdown';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { QueryErrorState } from '@/components/shared/QueryErrorState';
 import { formatTHB } from '@/lib/billing/money';
 import { cn } from '@/lib/utils';
 import type { OrderItemStatus, OrderItemView } from '@/lib/types';
@@ -33,7 +34,7 @@ function CookingCountdown({ item }: { item: OrderItemView }) {
 }
 
 export default function OrdersPage() {
-  const { rounds, loading, error } = useOrders();
+  const { rounds, loading, error, refetch } = useOrders();
 
   if (loading) {
     return (
@@ -45,7 +46,11 @@ export default function OrdersPage() {
   }
 
   if (error) {
-    return <p className="p-4 text-sm text-destructive">{error.message}</p>;
+    return (
+      <div className="p-4">
+        <QueryErrorState message={error.message} onRetry={refetch} />
+      </div>
+    );
   }
 
   if (rounds.length === 0) {

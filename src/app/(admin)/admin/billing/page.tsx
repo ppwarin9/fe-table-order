@@ -25,6 +25,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { QueryErrorState } from '@/components/shared/QueryErrorState';
 
 export default function AdminBillingPage() {
   return (
@@ -35,7 +36,7 @@ export default function AdminBillingPage() {
 }
 
 function BillingContent() {
-  const { data: sessions, isPending, error } = useActiveSessions();
+  const { data: sessions, isPending, error, refetch } = useActiveSessions();
   const closeSession = useCloseSession();
   const [closingSession, setClosingSession] = useState<ActiveSessionView | null>(null);
   const [viewingSession, setViewingSession] = useState<ActiveSessionView | null>(null);
@@ -61,7 +62,7 @@ function BillingContent() {
           <Skeleton className="h-24" />
         </div>
       ) : error ? (
-        <p className="text-sm text-destructive">{error.message}</p>
+        <QueryErrorState message={error.message} onRetry={() => refetch()} />
       ) : !sessions || sessions.length === 0 ? (
         <p className="text-sm text-muted-foreground">ไม่มีโต๊ะที่เปิดอยู่ตอนนี้</p>
       ) : (

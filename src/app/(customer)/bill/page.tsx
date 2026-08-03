@@ -7,12 +7,13 @@ import { useSessionStore } from '@/stores/sessionStore';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { QueryErrorState } from '@/components/shared/QueryErrorState';
 import { formatTHB } from '@/lib/billing/money';
 import type { PaymentMethodCode, SplitMethod } from '@/lib/types';
 
 export default function BillPage() {
   const { memberId } = useSessionStore();
-  const { bill, loading, error, issueBill, payShare } = useBill();
+  const { bill, loading, error, issueBill, payShare, refetch } = useBill();
   const [splitMethod, setSplitMethod] = useState<SplitMethod>('equal');
   const [issuing, setIssuing] = useState(false);
   const [payingShareId, setPayingShareId] = useState<string | null>(null);
@@ -26,7 +27,11 @@ export default function BillPage() {
   }
 
   if (error) {
-    return <p className="p-4 text-sm text-destructive">{error.message}</p>;
+    return (
+      <div className="p-4">
+        <QueryErrorState message={error.message} onRetry={refetch} />
+      </div>
+    );
   }
 
   const handleIssue = async () => {

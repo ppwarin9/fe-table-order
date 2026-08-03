@@ -7,12 +7,13 @@ import { useCart } from '@/hooks/useCart';
 import { useOrders } from '@/hooks/useOrders';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { QueryErrorState } from '@/components/shared/QueryErrorState';
 import { formatTHB } from '@/lib/billing/money';
 import { Minus, Plus, Trash2 } from 'lucide-react';
 
 export default function CartPage() {
   const router = useRouter();
-  const { cart, loading, error, updateQty, removeItem } = useCart();
+  const { cart, loading, error, updateQty, removeItem, refetch } = useCart();
   const { submitRound } = useOrders();
   const [submitting, setSubmitting] = useState(false);
 
@@ -39,7 +40,11 @@ export default function CartPage() {
   }
 
   if (error) {
-    return <p className="p-4 text-sm text-destructive">{error.message}</p>;
+    return (
+      <div className="p-4">
+        <QueryErrorState message={error.message} onRetry={refetch} />
+      </div>
+    );
   }
 
   const items = cart?.items ?? [];

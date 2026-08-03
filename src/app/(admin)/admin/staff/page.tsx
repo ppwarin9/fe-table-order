@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { QueryErrorState } from '@/components/shared/QueryErrorState';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -151,7 +152,7 @@ function StaffTab() {
           ))}
         </div>
       ) : staffQuery.error ? (
-        <p className="text-sm text-destructive">{staffQuery.error.message}</p>
+        <QueryErrorState message={staffQuery.error.message} onRetry={() => staffQuery.refetch()} />
       ) : staffList.length === 0 ? (
         <p className="text-sm text-muted-foreground">ยังไม่มีพนักงาน</p>
       ) : (
@@ -271,7 +272,7 @@ function RolesTab() {
           ))}
         </div>
       ) : rolesQuery.error ? (
-        <p className="text-sm text-destructive">{rolesQuery.error.message}</p>
+        <QueryErrorState message={rolesQuery.error.message} onRetry={() => rolesQuery.refetch()} />
       ) : (
         <ul className="flex max-w-lg flex-col gap-2">
           {roles.map((role) => (

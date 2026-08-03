@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MemberAvatarStack } from '@/components/customer/MemberAvatarStack';
+import { QueryErrorState } from '@/components/shared/QueryErrorState';
 import { formatTHB } from '@/lib/billing/money';
 
 export default function MenuPage() {
@@ -59,7 +60,7 @@ export default function MenuPage() {
           ))}
         </div>
       ) : itemsQuery.error ? (
-        <p className="text-sm text-destructive">{itemsQuery.error.message}</p>
+        <QueryErrorState message={itemsQuery.error.message} onRetry={() => itemsQuery.refetch()} />
       ) : itemsQuery.data?.length === 0 ? (
         <p className="text-sm text-muted-foreground">ยังไม่มีเมนูในหมวดนี้</p>
       ) : (

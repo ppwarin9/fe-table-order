@@ -11,6 +11,7 @@ import type { OrderItemStatus } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
+import { QueryErrorState } from '@/components/shared/QueryErrorState';
 import { cn } from '@/lib/utils';
 
 type Filter = 'active' | 'all';
@@ -95,7 +96,7 @@ export default function AdminOrdersPage() {
           ))}
         </div>
       ) : query.error ? (
-        <p className="text-sm text-destructive">{query.error.message}</p>
+        <QueryErrorState message={query.error.message} onRetry={() => query.refetch()} />
       ) : (
         <div className={cn('grid grid-cols-1 gap-4', columns.length === 3 ? 'md:grid-cols-3' : 'md:grid-cols-2')}>
           {columns.map((column) => {

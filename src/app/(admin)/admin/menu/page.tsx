@@ -10,6 +10,7 @@ import { RequireRole } from '@/components/admin/RequireRole';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { QueryErrorState } from '@/components/shared/QueryErrorState';
 
 export default function AdminMenuPage() {
   return (
@@ -67,7 +68,7 @@ function MenuListContent() {
           ))}
         </div>
       ) : itemsQuery.error ? (
-        <p className="text-sm text-destructive">{itemsQuery.error.message}</p>
+        <QueryErrorState message={itemsQuery.error.message} onRetry={() => itemsQuery.refetch()} />
       ) : items.length === 0 ? (
         <p className="text-sm text-muted-foreground">ยังไม่มีเมนู</p>
       ) : (

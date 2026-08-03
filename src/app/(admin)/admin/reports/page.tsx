@@ -8,6 +8,7 @@ import { RequireRole } from '@/components/admin/RequireRole';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
+import { QueryErrorState } from '@/components/shared/QueryErrorState';
 
 export default function AdminReportsPage() {
   return (
@@ -30,7 +31,7 @@ function ReportsContent() {
       </div>
 
       {query.error ? (
-        <p className="text-sm text-destructive">{query.error.message}</p>
+        <QueryErrorState message={query.error.message} onRetry={() => query.refetch()} />
       ) : query.isPending ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Skeleton className="h-24" />

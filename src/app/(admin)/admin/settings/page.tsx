@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { QueryErrorState } from '@/components/shared/QueryErrorState';
 
 export default function AdminSettingsPage() {
   return (
@@ -24,7 +25,7 @@ function SettingsContent() {
   const query = useStoreSetting();
 
   if (query.error) {
-    return <p className="text-sm text-destructive">{query.error.message}</p>;
+    return <QueryErrorState message={query.error.message} onRetry={() => query.refetch()} />;
   }
 
   if (query.isPending || !query.data) {

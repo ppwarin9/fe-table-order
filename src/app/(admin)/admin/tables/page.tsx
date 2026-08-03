@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { QueryErrorState } from '@/components/shared/QueryErrorState';
 import { env } from '@/config/env';
 
 export default function AdminTablesPage() {
@@ -100,7 +101,7 @@ function TablesContent() {
           ))}
         </div>
       ) : tablesQuery.error ? (
-        <p className="text-sm text-destructive">{tablesQuery.error.message}</p>
+        <QueryErrorState message={tablesQuery.error.message} onRetry={() => tablesQuery.refetch()} />
       ) : (
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
           {tables.map((table) => (
