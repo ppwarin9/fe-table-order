@@ -143,6 +143,7 @@ interface BackendAdminOrderItem {
   tableSessionId: string;
   tableNumber: string;
   roundNumber: number;
+  submittedAt: string;
   quantity: number;
   nameSnapshot: string;
   note: string;

@@ -4,19 +4,28 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useMenuCategories } from '@/hooks/queries/useMenuCategories';
 import { useMenuItems } from '@/hooks/queries/useMenuItems';
+import { useSession } from '@/hooks/useSession';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { MemberAvatarStack } from '@/components/customer/MemberAvatarStack';
 import { formatTHB } from '@/lib/billing/money';
 
 export default function MenuPage() {
   const [categoryId, setCategoryId] = useState<string | undefined>(undefined);
   const categoriesQuery = useMenuCategories();
   const itemsQuery = useMenuItems(categoryId);
+  const { tableNumber, members } = useSession();
 
   return (
     <div className="flex flex-col gap-4 p-4">
-      <h1 className="text-lg font-semibold">เมนู</h1>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-lg font-semibold">เมนู</h1>
+          {tableNumber && <p className="text-sm text-muted-foreground">โต๊ะ {tableNumber}</p>}
+        </div>
+        <MemberAvatarStack members={members} />
+      </div>
 
       {categoriesQuery.isPending ? (
         <div className="flex gap-2">

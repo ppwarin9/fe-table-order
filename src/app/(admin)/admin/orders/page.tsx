@@ -2,19 +2,21 @@
 
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import { CalendarClock, ChefHat, PackageCheck } from 'lucide-react';
 import { useAdminOrderQueue } from '@/hooks/queries/useAdminOrderQueue';
 import { useUpdateOrderItemStatus } from '@/hooks/mutations/useAdminOrderQueueMutations';
+import { useElapsedMinutes } from '@/hooks/useElapsedMinutes';
 import type { AdminOrderItemView } from '@/lib/api/contract';
 import type { OrderItemStatus } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
 
 type Filter = 'active' | 'all';
 
-// Backend enforces PENDING → COOKING → SERVED strictly forward-only, no reordering — a
-// simple "next status" button per item matches that model exactly.
+// Backend enforces PENDING → COOKING → SERVED strictly forward-only, no reordering —
+// a simple "next status" button per item matches that model exactly (no drag-and-drop).
 const NEXT_STATUS: Partial<Record<OrderItemStatus, OrderItemStatus>> = {
   pending: 'cooking',
   cooking: 'served',
@@ -24,22 +26,17 @@ const NEXT_LABEL: Record<OrderItemStatus, string> = {
   cooking: 'เสิร์ฟแล้ว',
   served: '',
 };
-const STATUS_LABEL: Record<OrderItemStatus, string> = {
-  pending: 'รอคิว',
-  cooking: 'กำลังทำ',
-  served: 'เสิร์ฟแล้ว',
-};
 
-function groupByTable(items: AdminOrderItemView[]) {
-  const groups = new Map<string, { tableNumber: string; items: AdminOrderItemView[] }>();
-  for (const item of items) {
-    const key = `${item.tableSessionId}:${item.roundNumber}`;
-    const group = groups.get(key) ?? { tableNumber: item.tableNumber, items: [] };
-    group.items.push(item);
-    groups.set(key, group);
-  }
-  return [...groups.entries()].sort(([, a], [, b]) => a.tableNumber.localeCompare(b.tableNumber, undefined, { numeric: true }));
-}
+const COLUMNS: {
+  status: OrderItemStatus;
+  label: string;
+  icon: typeof CalendarClock;
+  headerClass: string;
+}[] = [
+  { status: 'pending', label: 'รอคิว', icon: CalendarClock, headerClass: 'text-foreground' },
+  { status: 'cooking', label: 'กำลังทำ', icon: ChefHat, headerClass: 'text-amber-600' },
+  { status: 'served', label: 'เสิร์ฟแล้ว', icon: PackageCheck, headerClass: 'text-emerald-600' },
+];
 
 export default function AdminOrdersPage() {
   const [filter, setFilter] = useState<Filter>('active');
@@ -47,7 +44,17 @@ export default function AdminOrdersPage() {
   const updateStatus = useUpdateOrderItemStatus();
   const [busyItemIds, setBusyItemIds] = useState<Set<string>>(new Set());
 
-  const groups = useMemo(() => groupByTable(query.data ?? []), [query.data]);
+  const columns = filter === 'all' ? COLUMNS : COLUMNS.filter((c) => c.status !== 'served');
+
+  const itemsByStatus = useMemo(() => {
+    const map = new Map<OrderItemStatus, AdminOrderItemView[]>();
+    for (const item of query.data ?? []) {
+      const list = map.get(item.status) ?? [];
+      list.push(item);
+      map.set(item.status, list);
+    }
+    return map;
+  }, [query.data]);
 
   const handleAdvance = async (item: AdminOrderItemView) => {
     const next = NEXT_STATUS[item.status];
@@ -69,7 +76,10 @@ export default function AdminOrdersPage() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">คิวออเดอร์</h1>
+        <div>
+          <h1 className="text-2xl font-semibold">คิวออเดอร์</h1>
+          <p className="text-sm text-muted-foreground">{(query.data ?? []).length} รายการที่แสดงอยู่</p>
+        </div>
         <Tabs value={filter} onValueChange={(v) => setFilter(v as Filter)}>
           <TabsList>
             <TabsTrigger value="active">ยังไม่เสร็จ</TabsTrigger>
@@ -81,45 +91,84 @@ export default function AdminOrdersPage() {
       {query.isPending ? (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-64" />
+            <Skeleton key={i} className="h-96" />
           ))}
         </div>
       ) : query.error ? (
         <p className="text-sm text-destructive">{query.error.message}</p>
-      ) : groups.length === 0 ? (
-        <p className="text-sm text-muted-foreground">ไม่มีรายการในคิว</p>
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          {groups.map(([key, group]) => (
-            <div key={key} className="rounded-xl border border-border bg-card p-3">
-              <p className="mb-2 font-semibold">โต๊ะ {group.tableNumber}</p>
-              <div className="flex flex-col gap-2">
-                {group.items.map((item) => (
-                  <div key={item.id} className="flex items-center justify-between gap-2 rounded-lg border border-border p-2">
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">
-                        {item.nameSnapshot} × {item.quantity}
-                      </p>
-                      {item.note && <p className="text-xs text-muted-foreground">{item.note}</p>}
-                      <Badge variant="secondary" className="mt-1">
-                        {STATUS_LABEL[item.status]}
-                      </Badge>
-                    </div>
-                    {NEXT_STATUS[item.status] && (
-                      <Button
-                        size="sm"
-                        disabled={busyItemIds.has(item.id)}
-                        onClick={() => handleAdvance(item)}
-                      >
-                        {NEXT_LABEL[item.status]}
-                      </Button>
-                    )}
+        <div className={cn('grid grid-cols-1 gap-4', columns.length === 3 ? 'md:grid-cols-3' : 'md:grid-cols-2')}>
+          {columns.map((column) => {
+            const columnItems = itemsByStatus.get(column.status) ?? [];
+            const Icon = column.icon;
+            return (
+              <div key={column.status} className="flex flex-col gap-3 rounded-xl bg-muted/30 p-3">
+                <div className="flex items-center justify-between px-1">
+                  <div className={cn('flex items-center gap-1.5 font-semibold', column.headerClass)}>
+                    <Icon className="size-4.5" />
+                    {column.label}
                   </div>
-                ))}
+                  <span className="flex size-6 items-center justify-center rounded-full bg-background text-xs font-semibold shadow-sm">
+                    {columnItems.length}
+                  </span>
+                </div>
+
+                {columnItems.length === 0 ? (
+                  <p className="px-1 text-sm text-muted-foreground">ไม่มีรายการ</p>
+                ) : (
+                  <div className="flex flex-col gap-3">
+                    {columnItems.map((item) => (
+                      <OrderItemCard
+                        key={item.id}
+                        item={item}
+                        busy={busyItemIds.has(item.id)}
+                        onAdvance={() => handleAdvance(item)}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
+      )}
+    </div>
+  );
+}
+
+function OrderItemCard({
+  item,
+  busy,
+  onAdvance,
+}: {
+  item: AdminOrderItemView;
+  busy: boolean;
+  onAdvance: () => void;
+}) {
+  const elapsed = useElapsedMinutes(item.status === 'cooking' && item.startedAt ? item.startedAt : item.submittedAt);
+  const next = NEXT_STATUS[item.status];
+  const urgent = item.status !== 'served' && elapsed >= item.estimatedMinutes;
+
+  return (
+    <div className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3 shadow-sm">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-bold">โต๊ะ {item.tableNumber}</p>
+        {item.status !== 'served' && (
+          <span className={cn('text-xs font-semibold tabular-nums', urgent ? 'text-red-600' : 'text-muted-foreground')}>
+            {elapsed} นาที
+          </span>
+        )}
+      </div>
+      <div>
+        <p className="text-sm font-medium">
+          {item.quantity}x {item.nameSnapshot}
+        </p>
+        {item.note && <p className="text-xs text-muted-foreground">-- {item.note}</p>}
+      </div>
+      {next && (
+        <Button size="sm" className="mt-1 w-full" disabled={busy} onClick={onAdvance}>
+          {NEXT_LABEL[item.status]}
+        </Button>
       )}
     </div>
   );

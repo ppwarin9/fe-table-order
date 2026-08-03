@@ -16,6 +16,7 @@ import {
 import { signOut, useSession } from 'next-auth/react';
 import { cn } from '@/lib/utils';
 import { ADMIN_LOGIN_PATH } from '@/lib/routes';
+import { useAdminOrderQueue } from '@/hooks/queries/useAdminOrderQueue';
 
 interface NavLink {
   href: string;
@@ -43,6 +44,12 @@ export function Sidebar() {
   const staffEmail = session?.user?.email ?? '';
   const handleSignOut = () => signOut({ callbackUrl: ADMIN_LOGIN_PATH });
 
+  // Active (not-yet-served) queue count — badged on the orders link, same idea as the
+  // customer bottom nav's cart/orders dots.
+  const orderQueueQuery = useAdminOrderQueue(false);
+  const pendingOrderCount = orderQueueQuery.data?.length ?? 0;
+  const badgeCountFor = (href: string) => (href === '/admin/orders' ? pendingOrderCount : 0);
+
   return (
     <aside className="flex h-dvh w-60 shrink-0 flex-col border-r border-border bg-card">
       <div className="flex items-center gap-2.5 border-b border-border p-4">
@@ -60,6 +67,7 @@ export function Sidebar() {
           .map((link) => {
             const active = link.href === '/admin' ? pathname === '/admin' : pathname.startsWith(link.href);
             const Icon = link.icon;
+            const count = badgeCountFor(link.href);
             return (
               <Link
                 key={link.href}
@@ -73,6 +81,11 @@ export function Sidebar() {
               >
                 <Icon className="size-4.5 shrink-0" strokeWidth={active ? 2.25 : 2} />
                 <span className="flex-1">{link.label}</span>
+                {count > 0 && (
+                  <span className="flex size-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-medium text-white">
+                    {count > 9 ? '9+' : count}
+                  </span>
+                )}
               </Link>
             );
           })}
