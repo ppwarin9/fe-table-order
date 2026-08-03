@@ -2,11 +2,16 @@
 
 import Link from 'next/link';
 import { useActiveSessions, useDailyReport } from '@/hooks/queries/useAdminDashboard';
+import { useAdminOrderQueue } from '@/hooks/queries/useAdminOrderQueue';
+import { useAdminTables } from '@/hooks/queries/useAdminTables';
 import { formatTHB } from '@/lib/billing/money';
 import { todayISODate } from '@/lib/utils/date';
 import { RequireRole } from '@/components/admin/RequireRole';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
+import type { ActiveSessionView } from '@/lib/api/contract';
 
 function StatCard({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
@@ -28,12 +33,40 @@ export default function AdminDashboardPage() {
   );
 }
 
+// Longest still-outstanding item's remaining estimate — cooking items count down from
+// when they actually started, pending items haven't started yet so use the full estimate.
+function estimateWaitMinutes(queue: { status: string; startedAt: string | null; estimatedMinutes: number }[]): number {
+  const remaining = queue.map((item) => {
+    if (item.status === 'cooking' && item.startedAt) {
+      const elapsed = (Date.now() - new Date(item.startedAt).getTime()) / 60_000;
+      return Math.max(0, Math.round(item.estimatedMinutes - elapsed));
+    }
+    return item.estimatedMinutes;
+  });
+  return remaining.length > 0 ? Math.max(...remaining) : 0;
+}
+
+function tableStatus(session: ActiveSessionView): { label: string; variant: 'default' | 'secondary' | 'destructive' } {
+  if (session.openBillAmount !== null) return { label: 'รอชำระ', variant: 'destructive' };
+  if (session.cookingItemCount > 0) return { label: 'กำลังทำ', variant: 'default' };
+  if (session.pendingItemCount > 0) return { label: 'กำลังสั่ง', variant: 'secondary' };
+  return { label: 'นั่งแล้ว', variant: 'secondary' };
+}
+
+function minutesAgo(iso: string): number {
+  return Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 60_000));
+}
+
 function DashboardContent() {
   const sessionsQuery = useActiveSessions();
   const reportQuery = useDailyReport(todayISODate());
+  const tablesQuery = useAdminTables();
+  const queueQuery = useAdminOrderQueue(false);
 
   const sessions = sessionsQuery.data ?? [];
   const report = reportQuery.data ?? null;
+  const totalTables = tablesQuery.data?.length ?? null;
+  const waitMinutes = estimateWaitMinutes(queueQuery.data ?? []);
 
   if (sessionsQuery.error) {
     return <p className="text-sm text-destructive">{sessionsQuery.error.message}</p>;
@@ -44,18 +77,27 @@ function DashboardContent() {
       <h1 className="text-2xl font-semibold">ภาพรวมวันนี้</h1>
 
       {sessionsQuery.isPending || reportQuery.isPending ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-24" />
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <StatCard label="โต๊ะที่มีลูกค้า" value={String(sessions.length)} hint="session ที่เปิดอยู่" />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard
+            label="โต๊ะที่ใช้งาน"
+            value={totalTables !== null ? `${sessions.length}/${totalTables}` : String(sessions.length)}
+            hint="โต๊ะที่เปิดอยู่ / ทั้งหมด"
+          />
           <StatCard
             label="รายการค้างเสิร์ฟ"
             value={String(sessions.reduce((sum, s) => sum + s.pendingItemCount, 0))}
             hint="รวมทุกโต๊ะที่เปิดอยู่"
+          />
+          <StatCard
+            label="เวลารอโดยประมาณ"
+            value={queueQuery.isPending ? '—' : `${waitMinutes} นาที`}
+            hint="รายการที่รอนานที่สุดในคิว"
           />
           <StatCard
             label="ยอดขายวันนี้"
@@ -70,25 +112,40 @@ function DashboardContent() {
         {sessionsQuery.isPending ? (
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-20" />
+              <Skeleton key={i} className="h-24" />
             ))}
           </div>
         ) : sessions.length === 0 ? (
           <p className="text-sm text-muted-foreground">ยังไม่มีลูกค้าในร้านตอนนี้</p>
         ) : (
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            {sessions.map((s) => (
-              <Link
-                key={s.sessionId}
-                href="/admin/billing"
-                className="rounded-xl border border-border bg-card p-4 hover:border-primary"
-              >
-                <p className="font-bold">โต๊ะ {s.tableNumber}</p>
-                <p className="text-xs text-muted-foreground">
-                  {s.memberCount} คน · {s.pendingItemCount} รายการค้างเสิร์ฟ
-                </p>
-              </Link>
-            ))}
+            {sessions.map((s) => {
+              const status = tableStatus(s);
+              return (
+                <Link
+                  key={s.sessionId}
+                  href="/admin/billing"
+                  className={cn(
+                    'flex flex-col gap-1.5 rounded-xl border bg-card p-3 shadow-sm hover:border-primary',
+                    status.variant === 'destructive' ? 'border-red-200' : 'border-border',
+                  )}
+                >
+                  <div className="flex items-center justify-between">
+                    <p className="font-bold">โต๊ะ {s.tableNumber}</p>
+                    <Badge variant={status.variant}>{status.label}</Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {s.memberCount} คน · นั่งมา {minutesAgo(s.openedAt)} นาที
+                  </p>
+                  {s.cookingItemCount > 0 && (
+                    <p className="text-xs text-muted-foreground">{s.cookingItemCount} รายการกำลังทำ</p>
+                  )}
+                  {s.openBillAmount !== null && (
+                    <p className="text-sm font-semibold text-red-600">{formatTHB(s.openBillAmount)}</p>
+                  )}
+                </Link>
+              );
+            })}
           </div>
         )}
       </section>

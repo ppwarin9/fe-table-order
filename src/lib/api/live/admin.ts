@@ -122,6 +122,8 @@ interface BackendActiveSession {
   openedAt: string;
   memberCount: number;
   pendingItemCount: number;
+  cookingItemCount: number;
+  openBillAmount: number | null;
 }
 
 export async function getActiveSessions(): Promise<ActiveSessionView[]> {
@@ -134,6 +136,8 @@ export async function getActiveSessions(): Promise<ActiveSessionView[]> {
       openedAt: s.openedAt,
       memberCount: s.memberCount,
       pendingItemCount: s.pendingItemCount,
+      cookingItemCount: s.cookingItemCount,
+      openBillAmount: s.openBillAmount,
     }))
     .sort((a, b) => a.tableNumber.localeCompare(b.tableNumber, undefined, { numeric: true }));
 }

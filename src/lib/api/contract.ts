@@ -100,6 +100,8 @@ export interface ActiveSessionView {
   openedAt: string;
   memberCount: number;
   pendingItemCount: number;
+  cookingItemCount: number;
+  openBillAmount: Satang | null;
 }
 
 // Flat, matching the real admin/order-items response exactly — no round-level grouping,

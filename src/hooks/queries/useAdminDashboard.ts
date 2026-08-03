@@ -11,7 +11,14 @@ export function useActiveSessions() {
   const realtimeOptions = useRealtimeQueryOptions();
   useRealtimeInvalidate(
     null,
-    ['session:closed', 'round:submitted', 'order_item:updated'],
+    [
+      'session:closed',
+      'round:submitted',
+      'order_item:updated',
+      'bill:issued',
+      'bill_share:updated',
+      'payment:updated',
+    ],
     activeSessionsQueryKey,
   );
   return useQuery<ActiveSessionView[], AppError>({
