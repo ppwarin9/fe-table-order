@@ -169,10 +169,10 @@ export function MenuForm({ initial, onSubmit, onCancel, submitLabel }: MenuFormP
 
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium">
+            <label htmlFor="menu-form-name" className="text-sm font-medium">
               ชื่อเมนู <span className="text-destructive">*</span>
             </label>
-            <Input aria-invalid={!!errors.name} {...register('name')} />
+            <Input id="menu-form-name" aria-invalid={!!errors.name} {...register('name')} />
             {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
           </div>
 
@@ -212,10 +212,16 @@ export function MenuForm({ initial, onSubmit, onCancel, submitLabel }: MenuFormP
 
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium">
+              <label htmlFor="menu-form-price" className="text-sm font-medium">
                 ราคา (บาท) <span className="text-destructive">*</span>
               </label>
-              <Input type="number" min={0} aria-invalid={!!errors.priceBaht} {...register('priceBaht')} />
+              <Input
+                id="menu-form-price"
+                type="number"
+                min={0}
+                aria-invalid={!!errors.priceBaht}
+                {...register('priceBaht')}
+              />
               {errors.priceBaht && <p className="text-xs text-destructive">{errors.priceBaht.message}</p>}
             </div>
             <div className="flex flex-col gap-1.5">
@@ -228,8 +234,15 @@ export function MenuForm({ initial, onSubmit, onCancel, submitLabel }: MenuFormP
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium">คำอธิบาย</label>
-        <Textarea aria-invalid={!!errors.description} maxLength={DESCRIPTION_MAX} {...register('description')} />
+        <label htmlFor="menu-form-description" className="text-sm font-medium">
+          คำอธิบาย
+        </label>
+        <Textarea
+          id="menu-form-description"
+          aria-invalid={!!errors.description}
+          maxLength={DESCRIPTION_MAX}
+          {...register('description')}
+        />
         <div className="flex items-center justify-between">
           {errors.description ? (
             <p className="text-xs text-destructive">{errors.description.message}</p>
