@@ -5,6 +5,7 @@ import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Link from 'next/link';
+import { ImageIcon } from 'lucide-react';
 import { useAdminMenuCategories } from '@/hooks/queries/useAdminMenu';
 import { bahtToSatang, satangToBaht } from '@/lib/billing/money';
 import type { MenuItem } from '@/lib/types';
@@ -12,13 +13,16 @@ import { ADMIN_MENU_PATH } from '@/lib/routes';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
+
+const DESCRIPTION_MAX = 300;
 
 // Mirrors the backend's CreateMenuItemDto/UpdateMenuItemDto constraints exactly, so
 // invalid input is caught here with an inline message instead of a raw 400 after submit.
 const menuFormSchema = z.object({
   name: z.string().trim().min(1, 'กรุณากรอกชื่อเมนู').max(100, 'ชื่อเมนูยาวเกินไป (ไม่เกิน 100 ตัวอักษร)'),
-  description: z.string().trim().min(1, 'กรุณากรอกคำอธิบาย').max(300, 'คำอธิบายยาวเกินไป (ไม่เกิน 300 ตัวอักษร)'),
+  description: z.string().trim().min(1, 'กรุณากรอกคำอธิบาย').max(DESCRIPTION_MAX, 'คำอธิบายยาวเกินไป'),
   priceBaht: z
     .string()
     .min(1, 'กรุณากรอกราคา')
@@ -29,6 +33,7 @@ const menuFormSchema = z.object({
     .string()
     .min(1, 'กรุณากรอกเวลาปรุง')
     .refine((v) => Number.isInteger(Number(v)) && Number(v) >= 1, 'เวลาปรุงต้องเป็นจำนวนเต็มตั้งแต่ 1 นาทีขึ้นไป'),
+  isAvailable: z.boolean(),
 });
 
 type MenuFormSchema = z.infer<typeof menuFormSchema>;
@@ -40,15 +45,17 @@ export interface MenuFormValues {
   imageUrl: string;
   categoryId: string;
   estimatedCookingMinutes: number;
+  isAvailable?: boolean;
 }
 
 interface MenuFormProps {
   initial?: MenuItem;
   onSubmit: (values: MenuFormValues) => Promise<void>;
+  onCancel?: () => void;
   submitLabel: string;
 }
 
-export function MenuForm({ initial, onSubmit, submitLabel }: MenuFormProps) {
+export function MenuForm({ initial, onSubmit, onCancel, submitLabel }: MenuFormProps) {
   const categoriesQuery = useAdminMenuCategories();
   const categories = useMemo(() => categoriesQuery.data ?? [], [categoriesQuery.data]);
 
@@ -67,10 +74,13 @@ export function MenuForm({ initial, onSubmit, submitLabel }: MenuFormProps) {
       imageUrl: initial?.imageUrl ?? '',
       categoryId: initial?.categoryId ?? '',
       minutes: String(initial?.estimatedCookingMinutes ?? 10),
+      isAvailable: initial?.isAvailable ?? true,
     },
   });
 
   const categoryId = useWatch({ control, name: 'categoryId' });
+  const imageUrl = useWatch({ control, name: 'imageUrl' });
+  const description = useWatch({ control, name: 'description' });
 
   useEffect(() => {
     if (!initial && !categoryId && categories.length > 0) {
@@ -86,68 +96,102 @@ export function MenuForm({ initial, onSubmit, submitLabel }: MenuFormProps) {
       imageUrl: values.imageUrl || `https://picsum.photos/seed/${encodeURIComponent(values.name)}/400/300`,
       categoryId: values.categoryId,
       estimatedCookingMinutes: Number(values.minutes),
+      ...(initial && { isAvailable: values.isAvailable }),
     });
   });
 
   return (
-    <form className="flex max-w-lg flex-col gap-4" onSubmit={submit}>
-      <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium">ชื่อเมนู</label>
-        <Input aria-invalid={!!errors.name} {...register('name')} />
-        {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
+    <form className="flex flex-col gap-4" onSubmit={submit}>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-[160px_1fr]">
+        <div className="flex flex-col gap-1.5">
+          <div className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-lg border border-dashed border-border bg-muted">
+            {imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={imageUrl} alt="" className="size-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
+            ) : (
+              <ImageIcon className="size-8 text-muted-foreground" />
+            )}
+          </div>
+          <p className="text-center text-[11px] text-muted-foreground">
+            แนะนำ 500x500px ไม่เกิน 2MB
+            <br />
+            (รองรับอัปโหลดไฟล์เร็วๆ นี้ — ตอนนี้ใส่เป็นลิงก์)
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium">
+              ชื่อเมนู <span className="text-destructive">*</span>
+            </label>
+            <Input aria-invalid={!!errors.name} {...register('name')} />
+            {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium">หมวดหมู่</label>
+            <Controller
+              control={control}
+              name="categoryId"
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange} disabled={categoriesQuery.isPending}>
+                  <SelectTrigger className="w-full" aria-invalid={!!errors.categoryId}>
+                    <SelectValue placeholder="เลือกหมวดหมู่" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {errors.categoryId && <p className="text-xs text-destructive">{errors.categoryId.message}</p>}
+            {categoriesQuery.error && (
+              <p className="text-xs text-destructive">โหลดหมวดหมู่ไม่สำเร็จ: {categoriesQuery.error.message}</p>
+            )}
+            {!categoriesQuery.isPending && !categoriesQuery.error && categories.length === 0 && (
+              <p className="text-xs text-muted-foreground">
+                ยังไม่มีหมวดหมู่ —{' '}
+                <Link href={`${ADMIN_MENU_PATH}/categories`} className="font-medium text-primary underline">
+                  ไปเพิ่มหมวดหมู่ก่อน
+                </Link>
+              </p>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium">
+                ราคา (บาท) <span className="text-destructive">*</span>
+              </label>
+              <Input type="number" min={0} aria-invalid={!!errors.priceBaht} {...register('priceBaht')} />
+              {errors.priceBaht && <p className="text-xs text-destructive">{errors.priceBaht.message}</p>}
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium">เวลาปรุง (นาที)</label>
+              <Input type="number" min={1} aria-invalid={!!errors.minutes} {...register('minutes')} />
+              {errors.minutes && <p className="text-xs text-destructive">{errors.minutes.message}</p>}
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium">คำอธิบาย</label>
-        <Textarea aria-invalid={!!errors.description} {...register('description')} />
-        {errors.description && <p className="text-xs text-destructive">{errors.description.message}</p>}
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium">ราคา (บาท)</label>
-          <Input type="number" min={0} aria-invalid={!!errors.priceBaht} {...register('priceBaht')} />
-          {errors.priceBaht && <p className="text-xs text-destructive">{errors.priceBaht.message}</p>}
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium">เวลาปรุง (นาที)</label>
-          <Input type="number" min={1} aria-invalid={!!errors.minutes} {...register('minutes')} />
-          {errors.minutes && <p className="text-xs text-destructive">{errors.minutes.message}</p>}
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium">หมวดหมู่</label>
-        <Controller
-          control={control}
-          name="categoryId"
-          render={({ field }) => (
-            <Select value={field.value} onValueChange={field.onChange} disabled={categoriesQuery.isPending}>
-              <SelectTrigger className="w-full" aria-invalid={!!errors.categoryId}>
-                <SelectValue placeholder="เลือกหมวดหมู่" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        <Textarea aria-invalid={!!errors.description} maxLength={DESCRIPTION_MAX} {...register('description')} />
+        <div className="flex items-center justify-between">
+          {errors.description ? (
+            <p className="text-xs text-destructive">{errors.description.message}</p>
+          ) : (
+            <span />
           )}
-        />
-        {errors.categoryId && <p className="text-xs text-destructive">{errors.categoryId.message}</p>}
-        {categoriesQuery.error && (
-          <p className="text-xs text-destructive">โหลดหมวดหมู่ไม่สำเร็จ: {categoriesQuery.error.message}</p>
-        )}
-        {!categoriesQuery.isPending && !categoriesQuery.error && categories.length === 0 && (
-          <p className="text-xs text-muted-foreground">
-            ยังไม่มีหมวดหมู่ —{' '}
-            <Link href={`${ADMIN_MENU_PATH}/categories`} className="font-medium text-primary underline">
-              ไปเพิ่มหมวดหมู่ก่อน
-            </Link>
+          <p className="text-[11px] text-muted-foreground">
+            {(description ?? '').length}/{DESCRIPTION_MAX} ตัวอักษร
           </p>
-        )}
+        </div>
       </div>
 
       <div className="flex flex-col gap-1.5">
@@ -156,9 +200,29 @@ export function MenuForm({ initial, onSubmit, submitLabel }: MenuFormProps) {
         {errors.imageUrl && <p className="text-xs text-destructive">{errors.imageUrl.message}</p>}
       </div>
 
-      <Button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? 'กำลังบันทึก...' : submitLabel}
-      </Button>
+      {initial && (
+        <Controller
+          control={control}
+          name="isAvailable"
+          render={({ field }) => (
+            <div className="flex items-center gap-2">
+              <Switch checked={field.value} onCheckedChange={field.onChange} />
+              <span className="text-sm">พร้อมขาย</span>
+            </div>
+          )}
+        />
+      )}
+
+      <div className="flex justify-end gap-2">
+        {onCancel && (
+          <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
+            ยกเลิก
+          </Button>
+        )}
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? 'กำลังบันทึก...' : submitLabel}
+        </Button>
+      </div>
     </form>
   );
 }

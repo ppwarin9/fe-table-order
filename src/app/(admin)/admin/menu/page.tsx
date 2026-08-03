@@ -1,16 +1,19 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { useAdminMenuCategories, useAdminMenuItems } from '@/hooks/queries/useAdminMenu';
-import { useDeleteMenuItem, useUpdateMenuItem } from '@/hooks/mutations/useMenuItemMutations';
+import { useCreateMenuItem, useDeleteMenuItem, useUpdateMenuItem } from '@/hooks/mutations/useMenuItemMutations';
 import { formatTHB } from '@/lib/billing/money';
 import type { MenuItem } from '@/lib/types';
 import { RequireRole } from '@/components/admin/RequireRole';
+import { MenuForm, type MenuFormValues } from '@/components/admin/MenuForm';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { QueryErrorState } from '@/components/shared/QueryErrorState';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 export default function AdminMenuPage() {
   return (
@@ -23,16 +26,45 @@ export default function AdminMenuPage() {
 function MenuListContent() {
   const categoriesQuery = useAdminMenuCategories();
   const itemsQuery = useAdminMenuItems();
+  const createMenuItem = useCreateMenuItem();
   const updateMenuItem = useUpdateMenuItem();
   const deleteMenuItem = useDeleteMenuItem();
 
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
+
   const categories = categoriesQuery.data ?? [];
   const items = itemsQuery.data ?? [];
+
+  const openCreate = () => {
+    setEditingItem(null);
+    setFormOpen(true);
+  };
+
+  const openEdit = (item: MenuItem) => {
+    setEditingItem(item);
+    setFormOpen(true);
+  };
 
   const toggleAvailable = async (item: MenuItem, isAvailable: boolean) => {
     try {
       await updateMenuItem.mutateAsync({ id: item.id, input: { isAvailable } });
       toast.success(isAvailable ? 'เปิดขายแล้ว' : 'ปิดขายชั่วคราว');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'บันทึกไม่สำเร็จ');
+    }
+  };
+
+  const handleSubmit = async (values: MenuFormValues) => {
+    try {
+      if (editingItem) {
+        await updateMenuItem.mutateAsync({ id: editingItem.id, input: values });
+        toast.success('บันทึกแล้ว');
+      } else {
+        await createMenuItem.mutateAsync(values);
+        toast.success('เพิ่มเมนูแล้ว');
+      }
+      setFormOpen(false);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'บันทึกไม่สำเร็จ');
     }
@@ -55,9 +87,7 @@ function MenuListContent() {
           <Link href="/admin/menu/categories">
             <Button variant="secondary">จัดการหมวดหมู่</Button>
           </Link>
-          <Link href="/admin/menu/new">
-            <Button>+ เพิ่มเมนู</Button>
-          </Link>
+          <Button onClick={openCreate}>+ เพิ่มเมนู</Button>
         </div>
       </div>
 
@@ -87,16 +117,16 @@ function MenuListContent() {
               {items.map((item) => (
                 <tr key={item.id} className="border-t border-border">
                   <td className="p-3">
-                    <div className="flex items-center gap-3">
+                    <button onClick={() => openEdit(item)} className="flex items-center gap-3 text-left">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={item.imageUrl} alt="" className="h-10 w-14 rounded-md object-cover" />
                       <div>
-                        <p className="font-medium">{item.name}</p>
+                        <p className="font-medium hover:underline">{item.name}</p>
                         <p className="text-xs text-muted-foreground">
                           {categories.find((c) => c.id === item.categoryId)?.name ?? '—'}
                         </p>
                       </div>
-                    </div>
+                    </button>
                   </td>
                   <td className="p-3">{formatTHB(item.price)}</td>
                   <td className="p-3">{item.estimatedCookingMinutes} นาที</td>
@@ -105,12 +135,12 @@ function MenuListContent() {
                   </td>
                   <td className="p-3">
                     <div className="flex justify-end gap-2">
-                      <Link
-                        href={`/admin/menu/${item.id}`}
+                      <button
+                        onClick={() => openEdit(item)}
                         className="rounded-md border border-border px-2.5 py-1 text-xs font-medium hover:bg-muted"
                       >
                         แก้ไข
-                      </Link>
+                      </button>
                       <button
                         onClick={() => handleDelete(item)}
                         className="rounded-md border border-border px-2.5 py-1 text-xs font-medium text-destructive hover:bg-destructive/10"
@@ -125,6 +155,21 @@ function MenuListContent() {
           </table>
         </div>
       )}
+
+      <Dialog open={formOpen} onOpenChange={setFormOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editingItem ? 'แก้ไขเมนู' : 'เพิ่มเมนูใหม่'}</DialogTitle>
+            {editingItem && <DialogDescription>แก้ไขรายละเอียดของ &ldquo;{editingItem.name}&rdquo;</DialogDescription>}
+          </DialogHeader>
+          <MenuForm
+            initial={editingItem ?? undefined}
+            onSubmit={handleSubmit}
+            onCancel={() => setFormOpen(false)}
+            submitLabel={editingItem ? 'บันทึก' : 'เพิ่มเมนู'}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
