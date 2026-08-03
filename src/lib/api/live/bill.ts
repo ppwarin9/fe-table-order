@@ -13,20 +13,16 @@ import type {
 } from '@/lib/types';
 import type { PaymentView } from '../contract';
 import { liffHttp } from './http/liffHttp';
+import {
+  SPLIT_METHOD_FROM_BACKEND,
+  SPLIT_METHOD_TO_BACKEND,
+  type BackendSplitMethod,
+} from './splitMethod';
 
-type BackendSplitMethod = 'EQUAL' | 'SINGLE_PAYER';
 type BackendBillStatus = 'OPEN' | 'SETTLED' | 'VOID';
 type BackendBillShareStatus = 'UNPAID' | 'PAID';
 type BackendPaymentMethod = 'PROMPTPAY' | 'CASH';
 
-const SPLIT_METHOD_TO_BACKEND: Record<SplitMethod, BackendSplitMethod> = {
-  equal: 'EQUAL',
-  single_payer: 'SINGLE_PAYER',
-};
-const SPLIT_METHOD_FROM_BACKEND: Record<BackendSplitMethod, SplitMethod> = {
-  EQUAL: 'equal',
-  SINGLE_PAYER: 'single_payer',
-};
 const BILL_STATUS_FROM_BACKEND: Record<BackendBillStatus, BillStatus> = {
   OPEN: 'open',
   SETTLED: 'settled',

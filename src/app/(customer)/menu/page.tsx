@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useMenuCategories } from '@/hooks/queries/useMenuCategories';
 import { useMenuItems } from '@/hooks/queries/useMenuItems';
-import { useSession } from '@/hooks/useSession';
+import { useTableSession } from '@/hooks/useTableSession';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -16,7 +16,7 @@ export default function MenuPage() {
   const [categoryId, setCategoryId] = useState<string | undefined>(undefined);
   const categoriesQuery = useMenuCategories();
   const itemsQuery = useMenuItems(categoryId);
-  const { tableNumber, members } = useSession();
+  const { tableNumber, members } = useTableSession();
 
   return (
     <div className="flex flex-col gap-4 p-4">

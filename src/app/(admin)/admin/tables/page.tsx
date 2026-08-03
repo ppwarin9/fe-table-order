@@ -94,6 +94,15 @@ function TablesContent() {
         </Button>
       </div>
 
+      {sessionsQuery.error && (
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+          <span>โหลดสถานะโต๊ะ (ว่าง/มีลูกค้า) ไม่สำเร็จ — ป้ายสถานะด้านล่างอาจไม่ตรงกับความเป็นจริง</span>
+          <button className="shrink-0 font-medium underline" onClick={() => sessionsQuery.refetch()}>
+            ลองใหม่
+          </button>
+        </div>
+      )}
+
       {tablesQuery.isPending ? (
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (

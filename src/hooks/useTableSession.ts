@@ -10,7 +10,7 @@ import type { AppError } from '@/lib/api/live/http/normalizeError';
 import type { SessionInfo, SessionMemberView } from '@/lib/api/contract';
 import { CUSTOMER_JOIN_PATH } from '@/lib/routes';
 
-export function useSession() {
+export function useTableSession() {
   const router = useRouter();
   const { sessionId, memberId, tableNumber } = useSessionStore();
 

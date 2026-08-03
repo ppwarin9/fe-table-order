@@ -5,7 +5,6 @@ import type {
   DiningTable,
   OrderItemStatus,
   PaymentMethodCode,
-  SplitMethod,
   StoreSetting,
   StoreSettingPatch,
 } from '@/lib/types';
@@ -16,17 +15,11 @@ import {
   ORDER_ITEM_STATUS_TO_BACKEND,
   type BackendOrderItemStatus,
 } from './orderItemStatus';
-
-type BackendSplitMethod = 'EQUAL' | 'SINGLE_PAYER';
-
-const SPLIT_METHOD_TO_BACKEND: Record<SplitMethod, BackendSplitMethod> = {
-  equal: 'EQUAL',
-  single_payer: 'SINGLE_PAYER',
-};
-const SPLIT_METHOD_FROM_BACKEND: Record<BackendSplitMethod, SplitMethod> = {
-  EQUAL: 'equal',
-  SINGLE_PAYER: 'single_payer',
-};
+import {
+  SPLIT_METHOD_FROM_BACKEND,
+  SPLIT_METHOD_TO_BACKEND,
+  type BackendSplitMethod,
+} from './splitMethod';
 
 // ---- tables ----
 
