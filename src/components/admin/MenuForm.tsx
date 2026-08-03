@@ -1,12 +1,14 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Link from 'next/link';
-import { ImageIcon } from 'lucide-react';
+import { toast } from 'sonner';
+import { ImageIcon, Loader2, Upload } from 'lucide-react';
 import { useAdminMenuCategories } from '@/hooks/queries/useAdminMenu';
+import { useUploadMenuItemImage } from '@/hooks/mutations/useMenuItemMutations';
 import { bahtToSatang, satangToBaht } from '@/lib/billing/money';
 import type { MenuItem } from '@/lib/types';
 import { ADMIN_MENU_PATH } from '@/lib/routes';
@@ -17,6 +19,8 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 
 const DESCRIPTION_MAX = 300;
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 // Mirrors the backend's CreateMenuItemDto/UpdateMenuItemDto constraints exactly, so
 // invalid input is caught here with an inline message instead of a raw 400 after submit.
@@ -58,6 +62,8 @@ interface MenuFormProps {
 export function MenuForm({ initial, onSubmit, onCancel, submitLabel }: MenuFormProps) {
   const categoriesQuery = useAdminMenuCategories();
   const categories = useMemo(() => categoriesQuery.data ?? [], [categoriesQuery.data]);
+  const uploadImage = useUploadMenuItemImage();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
     register,
@@ -88,6 +94,29 @@ export function MenuForm({ initial, onSubmit, onCancel, submitLabel }: MenuFormP
     }
   }, [initial, categoryId, categories, setValue]);
 
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // allow re-selecting the same file later
+    if (!file) return;
+
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+      toast.error('รองรับเฉพาะไฟล์ JPEG, PNG, หรือ WebP');
+      return;
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      toast.error('ไฟล์ใหญ่เกินไป (ไม่เกิน 5MB)');
+      return;
+    }
+
+    try {
+      const url = await uploadImage.mutateAsync(file);
+      setValue('imageUrl', url, { shouldValidate: true });
+      toast.success('อัปโหลดรูปแล้ว');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'อัปโหลดรูปไม่สำเร็จ');
+    }
+  };
+
   const submit = handleSubmit(async (values) => {
     await onSubmit({
       name: values.name,
@@ -104,18 +133,37 @@ export function MenuForm({ initial, onSubmit, onCancel, submitLabel }: MenuFormP
     <form className="flex flex-col gap-4" onSubmit={submit}>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-[160px_1fr]">
         <div className="flex flex-col gap-1.5">
-          <div className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-lg border border-dashed border-border bg-muted">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploadImage.isPending}
+            className="group relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-lg border border-dashed border-border bg-muted"
+          >
             {imageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={imageUrl} alt="" className="size-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
             ) : (
               <ImageIcon className="size-8 text-muted-foreground" />
             )}
-          </div>
+            <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all group-hover:bg-black/40 group-hover:opacity-100">
+              {uploadImage.isPending ? (
+                <Loader2 className="size-6 animate-spin text-white" />
+              ) : (
+                <Upload className="size-6 text-white" />
+              )}
+            </div>
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept={ACCEPTED_IMAGE_TYPES.join(',')}
+            className="hidden"
+            onChange={handleFileSelect}
+          />
           <p className="text-center text-[11px] text-muted-foreground">
-            แนะนำ 500x500px ไม่เกิน 2MB
+            แนะนำ 500x500px ไม่เกิน 5MB
             <br />
-            (รองรับอัปโหลดไฟล์เร็วๆ นี้ — ตอนนี้ใส่เป็นลิงก์)
+            คลิกที่รูปเพื่ออัปโหลด
           </p>
         </div>
 
@@ -195,7 +243,7 @@ export function MenuForm({ initial, onSubmit, onCancel, submitLabel }: MenuFormP
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium">ลิงก์รูปภาพ (เว้นว่างเพื่อใช้รูปสุ่ม)</label>
+        <label className="text-sm font-medium">ลิงก์รูปภาพ (หรือจะวางลิงก์เองแทนการอัปโหลดก็ได้)</label>
         <Input aria-invalid={!!errors.imageUrl} {...register('imageUrl')} />
         {errors.imageUrl && <p className="text-xs text-destructive">{errors.imageUrl.message}</p>}
       </div>
@@ -219,7 +267,7 @@ export function MenuForm({ initial, onSubmit, onCancel, submitLabel }: MenuFormP
             ยกเลิก
           </Button>
         )}
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" disabled={isSubmitting || uploadImage.isPending}>
           {isSubmitting ? 'กำลังบันทึก...' : submitLabel}
         </Button>
       </div>

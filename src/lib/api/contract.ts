@@ -203,6 +203,9 @@ export interface ApiClient {
   createMenuItem(input: Omit<MenuItem, 'id' | 'isAvailable' | 'storeId'>): Promise<MenuItem>;
   updateMenuItem(menuItemId: ID, input: Partial<Omit<MenuItem, 'id'>>): Promise<MenuItem>;
   deleteMenuItem(menuItemId: ID): Promise<void>;
+  // Standalone from create/update — the create form has no menu item id yet, so this
+  // just uploads to Cloudinary and returns the hosted URL to put in the form.
+  uploadMenuItemImage(file: File): Promise<string>;
 
   // admin: settings
   getSettings(): Promise<StoreSetting>;

@@ -83,3 +83,16 @@ export async function updateMenuItem(
 export async function deleteMenuItem(menuItemId: ID): Promise<void> {
   await adminHttp.delete(`/admin/menu-items/${menuItemId}`);
 }
+
+// Standalone from create/update — works before a menu item id exists yet (the create
+// form's case). Axios sets the multipart boundary header itself from the FormData
+// instance; don't set Content-Type manually here.
+export async function uploadMenuItemImage(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append('image', file);
+  const { data } = await adminHttp.post<{ imageUrl: string }>(
+    '/admin/menu-items/upload-image',
+    formData,
+  );
+  return data.imageUrl;
+}

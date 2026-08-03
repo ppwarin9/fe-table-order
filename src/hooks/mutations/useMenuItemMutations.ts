@@ -37,3 +37,9 @@ export function useDeleteMenuItem() {
     onSuccess: invalidate,
   });
 }
+
+export function useUploadMenuItemImage() {
+  return useMutation<string, AppError, File>({
+    mutationFn: (file) => api.uploadMenuItemImage(file),
+  });
+}
