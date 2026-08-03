@@ -15,6 +15,7 @@ import type {
   Role,
   StaffUser,
   StoreSetting,
+  StoreSettingPatch,
 } from '@/lib/types';
 
 // ---- session ----
@@ -205,7 +206,7 @@ export interface ApiClient {
 
   // admin: settings
   getSettings(): Promise<StoreSetting>;
-  updateSettings(input: Partial<StoreSetting>): Promise<StoreSetting>;
+  updateSettings(input: StoreSettingPatch): Promise<StoreSetting>;
 
   // admin: report
   getReport(date: string): Promise<SalesReport>;

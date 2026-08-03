@@ -1,19 +1,11 @@
 import type { ID } from '@/lib/types/common';
 
-export interface Store {
-  id: ID;
-  name: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
 // The backend only ever supports these two (see BillModule) — no itemized split exists.
 export type SplitMethod = 'equal' | 'single_payer';
 
+// Single-store app — StoreSetting is a singleton row, no storeId column exists on it.
 export interface StoreSetting {
   id: ID;
-  storeId: ID;
   enableVat: boolean;
   vatRate: number;
   enableServiceCharge: boolean;
@@ -23,3 +15,10 @@ export interface StoreSetting {
   defaultSplitMethod: SplitMethod;
   updatedAt: string;
 }
+
+// Fields the backend's UpdateStoreSettingDto actually accepts — id/updatedAt are
+// server-managed, and the global ValidationPipe's forbidNonWhitelisted rejects the whole
+// request if either is included in the PATCH body.
+export type StoreSettingPatch = Partial<
+  Omit<StoreSetting, 'id' | 'updatedAt'>
+>;

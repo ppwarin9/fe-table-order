@@ -7,6 +7,7 @@ import type {
   PaymentMethodCode,
   SplitMethod,
   StoreSetting,
+  StoreSettingPatch,
 } from '@/lib/types';
 import type { ActiveSessionView, AdminBillView, AdminOrderItemView, SalesReport } from '../contract';
 import { adminHttp } from './http/adminHttp';
@@ -64,7 +65,6 @@ export async function deleteTable(tableId: ID): Promise<void> {
 
 interface BackendStoreSetting {
   id: string;
-  storeId: string;
   enableVat: boolean;
   vatRate: number;
   enableServiceCharge: boolean;
@@ -84,10 +84,20 @@ export async function getSettings(): Promise<StoreSetting> {
   return mapStoreSetting(data);
 }
 
-export async function updateSettings(input: Partial<StoreSetting>): Promise<StoreSetting> {
-  const { defaultSplitMethod, ...rest } = input;
+// Only ever sends the fields UpdateStoreSettingDto actually declares — the global
+// ValidationPipe's forbidNonWhitelisted rejects the whole request (400) if id/updatedAt
+// (or anything else undeclared) rides along, which is exactly what happened when the
+// settings page used to PATCH its full local draft object straight through.
+export async function updateSettings(input: StoreSettingPatch): Promise<StoreSetting> {
+  const { enableVat, vatRate, enableServiceCharge, serviceChargeRate, currency, timezone, defaultSplitMethod } =
+    input;
   const { data } = await adminHttp.patch<BackendStoreSetting>('/admin/store-setting', {
-    ...rest,
+    enableVat,
+    vatRate,
+    enableServiceCharge,
+    serviceChargeRate,
+    currency,
+    timezone,
     defaultSplitMethod: defaultSplitMethod ? SPLIT_METHOD_TO_BACKEND[defaultSplitMethod] : undefined,
   });
   return mapStoreSetting(data);
