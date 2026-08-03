@@ -14,7 +14,7 @@ interface BackendCartItem {
   quantity: number;
   note: string;
   addedAt: string;
-  menuItem: { name: string; price: number };
+  menuItem: { name: string; price: number; imageUrl?: string | null };
 }
 
 interface BackendCart {
@@ -51,6 +51,7 @@ function mapCartItem(
     addedAt: item.addedAt,
     menuName: item.menuItem.name,
     unitPrice: item.menuItem.price,
+    imageUrl: item.menuItem.imageUrl ?? '',
     modifiers: [],
     addedByName: name,
     addedByPicture: picture,

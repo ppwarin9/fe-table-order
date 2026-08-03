@@ -70,19 +70,29 @@ export default function OrdersPage() {
           <p className="mb-2 text-sm font-medium">รอบที่ {round.roundNumber}</p>
           <div className="flex flex-col gap-2">
             {round.items.map((item) => (
-              <div key={item.id} className="flex items-center justify-between gap-2 text-sm">
-                <div className="flex-1">
-                  <p>
-                    {item.nameSnapshot} × {item.quantity}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {item.addedByName} · {formatTHB(item.unitPriceSnapshot * item.quantity)}
-                  </p>
-                  {item.note && <p className="text-xs text-muted-foreground">หมายเหตุ: {item.note}</p>}
+              <div key={item.id} className="flex items-center gap-2 text-sm">
+                <div className="size-12 shrink-0 overflow-hidden rounded-lg bg-muted">
+                  {item.imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={item.imageUrl} alt="" className="size-full object-cover" />
+                  ) : (
+                    <div className="flex size-full items-center justify-center text-sm">🍽️</div>
+                  )}
                 </div>
-                <div className="flex flex-col items-end gap-1">
-                  <Badge variant={STATUS_VARIANT[item.status]}>{STATUS_LABEL[item.status]}</Badge>
-                  <CookingCountdown item={item} />
+                <div className="flex flex-1 items-center justify-between gap-2">
+                  <div className="flex-1">
+                    <p>
+                      {item.nameSnapshot} × {item.quantity}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {item.addedByName} · {formatTHB(item.unitPriceSnapshot * item.quantity)}
+                    </p>
+                    {item.note && <p className="text-xs text-muted-foreground">หมายเหตุ: {item.note}</p>}
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    <Badge variant={STATUS_VARIANT[item.status]}>{STATUS_LABEL[item.status]}</Badge>
+                    <CookingCountdown item={item} />
+                  </div>
                 </div>
               </div>
             ))}

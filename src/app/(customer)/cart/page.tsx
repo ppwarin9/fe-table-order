@@ -65,6 +65,14 @@ export default function CartPage() {
         <div className="flex flex-col gap-3">
           {items.map((item) => (
             <div key={item.id} className="flex gap-3 rounded-xl border border-border bg-card p-3">
+              <div className="size-16 shrink-0 overflow-hidden rounded-lg bg-muted">
+                {item.imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={item.imageUrl} alt="" className="size-full object-cover" />
+                ) : (
+                  <div className="flex size-full items-center justify-center text-lg">🍽️</div>
+                )}
+              </div>
               <div className="flex flex-1 flex-col gap-1">
                 <p className="text-sm font-medium">{item.menuName}</p>
                 {item.note && <p className="text-xs text-muted-foreground">หมายเหตุ: {item.note}</p>}

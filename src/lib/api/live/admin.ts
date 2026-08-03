@@ -164,10 +164,11 @@ interface BackendAdminOrderItem {
   status: BackendOrderItemStatus;
   startedAt: string | null;
   estimatedMinutes: number;
+  imageUrl: string | null;
 }
 
 function mapAdminOrderItem(item: BackendAdminOrderItem): AdminOrderItemView {
-  return { ...item, status: ORDER_ITEM_STATUS_FROM_BACKEND[item.status] };
+  return { ...item, status: ORDER_ITEM_STATUS_FROM_BACKEND[item.status], imageUrl: item.imageUrl ?? '' };
 }
 
 export async function getOrderQueue(status?: OrderItemStatus): Promise<AdminOrderItemView[]> {

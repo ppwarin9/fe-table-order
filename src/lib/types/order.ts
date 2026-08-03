@@ -23,6 +23,7 @@ export interface OrderItem {
   status: OrderItemStatus;
   startedAt: string | null;
   estimatedMinutes: number;
+  imageUrl: string;
 }
 
 export interface OrderItemSharer {

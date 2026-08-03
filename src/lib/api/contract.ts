@@ -119,6 +119,7 @@ export interface AdminOrderItemView {
   status: OrderItemStatus;
   startedAt: string | null;
   estimatedMinutes: number;
+  imageUrl: string;
 }
 
 // Real bill-detail view for the admin billing page, backed by

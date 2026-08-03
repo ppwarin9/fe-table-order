@@ -160,11 +160,21 @@ function OrderItemCard({
           </span>
         )}
       </div>
-      <div>
-        <p className="text-sm font-medium">
-          {item.quantity}x {item.nameSnapshot}
-        </p>
-        {item.note && <p className="text-xs text-muted-foreground">-- {item.note}</p>}
+      <div className="flex gap-2">
+        <div className="size-10 shrink-0 overflow-hidden rounded-md bg-muted">
+          {item.imageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={item.imageUrl} alt="" className="size-full object-cover" />
+          ) : (
+            <div className="flex size-full items-center justify-center text-sm">🍽️</div>
+          )}
+        </div>
+        <div className="flex-1">
+          <p className="text-sm font-medium">
+            {item.quantity}x {item.nameSnapshot}
+          </p>
+          {item.note && <p className="text-xs text-muted-foreground">-- {item.note}</p>}
+        </div>
       </div>
       {next && (
         <Button size="sm" className="mt-1 w-full" disabled={busy} onClick={onAdvance}>

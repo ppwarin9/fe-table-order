@@ -7,6 +7,7 @@ import { useSessionStore } from '@/stores/sessionStore';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { QueryErrorState } from '@/components/shared/QueryErrorState';
 import { formatTHB } from '@/lib/billing/money';
 import type { PaymentMethodCode, SplitMethod } from '@/lib/types';
@@ -64,26 +65,26 @@ export default function BillPage() {
         <h1 className="text-lg font-semibold">เรียกเก็บเงิน</h1>
         <p className="text-sm text-muted-foreground">ยังไม่มีบิลสำหรับโต๊ะนี้ เลือกวิธีหารบิลแล้วกดออกบิลได้เลย</p>
 
-        <div className="flex flex-col gap-2">
-          <label className="flex items-center gap-2 rounded-lg border border-border p-3 text-sm">
-            <input
-              type="radio"
-              name="splitMethod"
-              checked={splitMethod === 'equal'}
-              onChange={() => setSplitMethod('equal')}
-            />
+        <RadioGroup
+          value={splitMethod}
+          onValueChange={(v) => setSplitMethod(v as SplitMethod)}
+          className="gap-2"
+        >
+          <label
+            htmlFor="split-equal"
+            className="flex items-center gap-3 rounded-lg border border-border p-3 text-sm has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-accent"
+          >
+            <RadioGroupItem value="equal" id="split-equal" />
             หารเท่ากันทุกคนในโต๊ะ
           </label>
-          <label className="flex items-center gap-2 rounded-lg border border-border p-3 text-sm">
-            <input
-              type="radio"
-              name="splitMethod"
-              checked={splitMethod === 'single_payer'}
-              onChange={() => setSplitMethod('single_payer')}
-            />
+          <label
+            htmlFor="split-single"
+            className="flex items-center gap-3 rounded-lg border border-border p-3 text-sm has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-accent"
+          >
+            <RadioGroupItem value="single_payer" id="split-single" />
             คนเดียวจ่ายทั้งหมด (คุณจะเป็นผู้จ่าย)
           </label>
-        </div>
+        </RadioGroup>
 
         <Button onClick={handleIssue} disabled={issuing}>
           {issuing ? 'กำลังออกบิล...' : 'ออกบิล'}

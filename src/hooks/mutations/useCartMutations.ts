@@ -54,6 +54,7 @@ export function useAddCartItem() {
           note: input.note ?? '',
           addedAt: new Date().toISOString(),
           menuName: menuItem.name,
+          imageUrl: menuItem.imageUrl,
           unitPrice: menuItem.price,
           modifiers: [],
           addedByName: 'คุณ',

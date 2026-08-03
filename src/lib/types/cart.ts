@@ -23,6 +23,7 @@ export interface CartItemModifier {
 
 export interface CartItemView extends CartItem {
   menuName: string;
+  imageUrl: string;
   unitPrice: Satang;
   modifiers: { optionId: ID; name: string; priceDelta: Satang }[];
   addedByName: string;

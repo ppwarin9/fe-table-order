@@ -19,6 +19,7 @@ interface BackendOrderItem {
   status: BackendOrderItemStatus;
   startedAt: string | null;
   estimatedMinutes: number;
+  imageUrl: string | null;
 }
 
 interface BackendOrderRound {
@@ -53,6 +54,7 @@ function mapOrderItem(
     status: ORDER_ITEM_STATUS_FROM_BACKEND[item.status],
     startedAt: item.startedAt,
     estimatedMinutes: item.estimatedMinutes,
+    imageUrl: item.imageUrl ?? '',
     addedByName: member?.displayName ?? 'เพื่อนร่วมโต๊ะ',
   };
 }
