@@ -15,3 +15,23 @@ export function useSettleAdminBillShare(sessionId: ID) {
     },
   });
 }
+
+export function useConfirmAdminPayment(sessionId: ID) {
+  const queryClient = useQueryClient();
+  return useMutation<AdminBillView, AppError, ID>({
+    mutationFn: (paymentId) => api.confirmAdminPayment(sessionId, paymentId),
+    onSuccess: (bill) => {
+      queryClient.setQueryData(adminBillQueryKey(sessionId), bill);
+    },
+  });
+}
+
+export function useFailAdminPayment(sessionId: ID) {
+  const queryClient = useQueryClient();
+  return useMutation<AdminBillView, AppError, ID>({
+    mutationFn: (paymentId) => api.failAdminPayment(sessionId, paymentId),
+    onSuccess: (bill) => {
+      queryClient.setQueryData(adminBillQueryKey(sessionId), bill);
+    },
+  });
+}

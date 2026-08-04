@@ -190,6 +190,8 @@ interface BackendAdminBillShare {
   amountDue: number;
   status: 'UNPAID' | 'PAID';
   method: 'PROMPTPAY' | 'CASH' | null;
+  pendingPaymentId: string | null;
+  pendingPaymentMethod: 'PROMPTPAY' | 'CASH' | null;
 }
 
 interface BackendAdminBill {
@@ -216,6 +218,13 @@ function mapAdminBill(bill: BackendAdminBill): AdminBillView {
       amountDue: share.amountDue,
       status: share.status === 'PAID' ? 'paid' : 'unpaid',
       method: share.method === 'PROMPTPAY' ? 'promptpay' : share.method === 'CASH' ? 'cash' : null,
+      pendingPaymentId: share.pendingPaymentId,
+      pendingPaymentMethod:
+        share.pendingPaymentMethod === 'PROMPTPAY'
+          ? 'promptpay'
+          : share.pendingPaymentMethod === 'CASH'
+            ? 'cash'
+            : null,
     })),
   };
 }
@@ -225,9 +234,9 @@ export async function getAdminBillDetail(sessionId: ID): Promise<AdminBillView> 
   return mapAdminBill(data);
 }
 
-// Cash is settleable directly by billShareId. PromptPay isn't — confirming needs a
-// paymentId, and this bill view only exposes billShareId (no endpoint yet discovers the
-// paymentId a share's in-flight PromptPay payment was created under).
+// Records a cash payment collected in person, with no customer-app involvement at all —
+// only valid when the share has no pendingPaymentId (see confirmAdminPayment below for
+// the case where the customer already started paying themselves).
 export async function settleAdminBillShare(
   sessionId: ID,
   shareId: ID,
@@ -237,5 +246,17 @@ export async function settleAdminBillShare(
     throw new Error('ยังไม่รองรับการยืนยันพร้อมเพย์จากหน้านี้ — ต้องจ่ายผ่านหน้าลูกค้าแล้วให้พนักงานกดยืนยันที่ระบบแยกต่างหาก');
   }
   await adminHttp.post(`/admin/payments/bill-shares/${shareId}/cash`);
+  return getAdminBillDetail(sessionId);
+}
+
+// For a share the customer already created (and possibly notified) a payment for
+// themselves — confirms or fails that specific payment by its own id.
+export async function confirmAdminPayment(sessionId: ID, paymentId: ID): Promise<AdminBillView> {
+  await adminHttp.patch(`/admin/payments/${paymentId}/confirm`);
+  return getAdminBillDetail(sessionId);
+}
+
+export async function failAdminPayment(sessionId: ID, paymentId: ID): Promise<AdminBillView> {
+  await adminHttp.patch(`/admin/payments/${paymentId}/fail`);
   return getAdminBillDetail(sessionId);
 }

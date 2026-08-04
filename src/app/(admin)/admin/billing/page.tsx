@@ -5,7 +5,11 @@ import { toast } from 'sonner';
 import { useActiveSessions } from '@/hooks/queries/useAdminDashboard';
 import { useCloseSession } from '@/hooks/mutations/useAdminSessionMutations';
 import { useAdminBillDetail } from '@/hooks/queries/useAdminBilling';
-import { useSettleAdminBillShare } from '@/hooks/mutations/useAdminBillingMutations';
+import {
+  useConfirmAdminPayment,
+  useFailAdminPayment,
+  useSettleAdminBillShare,
+} from '@/hooks/mutations/useAdminBillingMutations';
 import type { ActiveSessionView } from '@/lib/api/contract';
 import { formatTime } from '@/lib/utils/date';
 import { formatTHB } from '@/lib/billing/money';
@@ -131,6 +135,8 @@ function BillDetailDialog({
 }) {
   const billQuery = useAdminBillDetail(sessionId);
   const settleShare = useSettleAdminBillShare(sessionId ?? '');
+  const confirmPayment = useConfirmAdminPayment(sessionId ?? '');
+  const failPayment = useFailAdminPayment(sessionId ?? '');
 
   const handleCash = async (shareId: string) => {
     try {
@@ -138,6 +144,24 @@ function BillDetailDialog({
       toast.success('บันทึกการชำระเงินสดแล้ว');
     } catch (e) {
       toast.error(getErrorMessage(e, 'บันทึกการชำระเงินไม่สำเร็จ'));
+    }
+  };
+
+  const handleConfirm = async (paymentId: string) => {
+    try {
+      await confirmPayment.mutateAsync(paymentId);
+      toast.success('ยืนยันการชำระแล้ว');
+    } catch (e) {
+      toast.error(getErrorMessage(e, 'ยืนยันการชำระไม่สำเร็จ'));
+    }
+  };
+
+  const handleFail = async (paymentId: string) => {
+    try {
+      await failPayment.mutateAsync(paymentId);
+      toast.success('ยกเลิกรายการที่ค้างอยู่แล้ว — ลูกค้าลองจ่ายใหม่ได้');
+    } catch (e) {
+      toast.error(getErrorMessage(e, 'ยกเลิกไม่สำเร็จ'));
     }
   };
 
@@ -171,13 +195,35 @@ function BillDetailDialog({
 
             <div className="flex flex-col gap-2">
               {billQuery.data.shares.map((share) => (
-                <div key={share.id} className="flex items-center justify-between rounded-lg border border-border p-2">
+                <div key={share.id} className="flex items-center justify-between gap-2 rounded-lg border border-border p-2">
                   <div>
                     <p className="text-sm font-medium">{share.label}</p>
                     <p className="text-xs text-muted-foreground">{formatTHB(share.amountDue)}</p>
                   </div>
                   {share.status === 'paid' ? (
                     <Badge variant="secondary">จ่ายแล้ว{share.method ? ` (${share.method === 'cash' ? 'เงินสด' : 'พร้อมเพย์'})` : ''}</Badge>
+                  ) : share.pendingPaymentId ? (
+                    <div className="flex flex-col items-end gap-1">
+                      <Badge>
+                        รอยืนยัน ({share.pendingPaymentMethod === 'cash' ? 'เงินสด' : 'พร้อมเพย์'})
+                      </Badge>
+                      <div className="flex gap-1.5">
+                        <button
+                          className="text-xs font-medium text-muted-foreground underline"
+                          disabled={failPayment.isPending}
+                          onClick={() => handleFail(share.pendingPaymentId as string)}
+                        >
+                          ยกเลิก
+                        </button>
+                        <Button
+                          size="sm"
+                          disabled={confirmPayment.isPending}
+                          onClick={() => handleConfirm(share.pendingPaymentId as string)}
+                        >
+                          ยืนยันการชำระ
+                        </Button>
+                      </div>
+                    </div>
                   ) : (
                     <Button size="sm" disabled={settleShare.isPending} onClick={() => handleCash(share.id)}>
                       รับเงินสด
@@ -187,7 +233,8 @@ function BillDetailDialog({
               ))}
             </div>
             <p className="text-xs text-muted-foreground">
-              การยืนยันชำระผ่านพร้อมเพย์ ต้องให้ลูกค้าแจ้งชำระจากหน้าลูกค้าก่อน แล้วจึงยืนยันแยกต่างหาก (ยังไม่รองรับจากหน้านี้)
+              &quot;รับเงินสด&quot; คือพนักงานเก็บเงินสดเองไม่ผ่านแอป — ถ้าลูกค้าแจ้งชำระจากหน้าลูกค้ามาก่อนแล้ว
+              (ไม่ว่าจะเลือกพร้อมเพย์หรือเงินสด) ระบบจะขึ้นปุ่ม &quot;ยืนยันการชำระ&quot; ให้กดยืนยันรายการนั้นแทน
             </p>
           </div>
         ) : (

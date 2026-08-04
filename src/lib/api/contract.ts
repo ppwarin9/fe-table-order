@@ -112,15 +112,18 @@ export interface AdminOrderItemView {
 }
 
 // Real bill-detail view for the admin billing page, backed by
-// GET /admin/table-sessions/:id/bill. A share's PromptPay payment can't be confirmed
-// from this view yet — confirming needs a paymentId, and this endpoint only exposes
-// billShareId; cash settlement works today via billShareId directly.
+// GET /admin/table-sessions/:id/bill.
 export interface AdminBillShareView {
   id: ID;
   label: string;
   amountDue: Satang;
   status: 'unpaid' | 'paid';
   method: PaymentMethodCode | null;
+  // Set when the customer already created (and possibly notified) a payment for this
+  // share themselves — pass this to confirmAdminPayment/failAdminPayment. Null means no
+  // payment attempt exists yet, so the only option is settleAdminBillShare('cash').
+  pendingPaymentId: ID | null;
+  pendingPaymentMethod: PaymentMethodCode | null;
 }
 
 export interface AdminBillView {
@@ -210,6 +213,9 @@ export interface ApiClient {
   // admin: billing detail
   getAdminBillDetail(sessionId: ID): Promise<AdminBillView>;
   settleAdminBillShare(sessionId: ID, shareId: ID, method: PaymentMethodCode): Promise<AdminBillView>;
+  // For a share the customer already started paying themselves (pendingPaymentId set).
+  confirmAdminPayment(sessionId: ID, paymentId: ID): Promise<AdminBillView>;
+  failAdminPayment(sessionId: ID, paymentId: ID): Promise<AdminBillView>;
 
   // admin: closing
   closeSession(sessionId: ID): Promise<void>;
