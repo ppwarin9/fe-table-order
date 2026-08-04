@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { QueryErrorState } from '@/components/shared/QueryErrorState';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { getErrorMessage } from '@/lib/api/live/http/normalizeError';
 
 export default function AdminMenuPage() {
   return (
@@ -51,7 +52,7 @@ function MenuListContent() {
       await updateMenuItem.mutateAsync({ id: item.id, input: { isAvailable } });
       toast.success(isAvailable ? 'เปิดขายแล้ว' : 'ปิดขายชั่วคราว');
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'บันทึกไม่สำเร็จ');
+      toast.error(getErrorMessage(e, 'บันทึกไม่สำเร็จ'));
     }
   };
 
@@ -66,7 +67,7 @@ function MenuListContent() {
       }
       setFormOpen(false);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'บันทึกไม่สำเร็จ');
+      toast.error(getErrorMessage(e, 'บันทึกไม่สำเร็จ'));
     }
   };
 
@@ -75,7 +76,7 @@ function MenuListContent() {
       await deleteMenuItem.mutateAsync(item.id);
       toast.success(`ลบ "${item.name}" แล้ว`);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'ลบไม่สำเร็จ');
+      toast.error(getErrorMessage(e, 'ลบไม่สำเร็จ'));
     }
   };
 

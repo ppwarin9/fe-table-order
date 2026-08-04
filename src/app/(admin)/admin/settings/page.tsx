@@ -12,6 +12,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { QueryErrorState } from '@/components/shared/QueryErrorState';
+import { getErrorMessage } from '@/lib/api/live/http/normalizeError';
 
 export default function AdminSettingsPage() {
   return (
@@ -46,7 +47,7 @@ function SettingsForm({ initial }: { initial: StoreSetting }) {
       await updateSetting.mutateAsync(draft);
       toast.success('บันทึกการตั้งค่าแล้ว');
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'บันทึกไม่สำเร็จ');
+      toast.error(getErrorMessage(e, 'บันทึกไม่สำเร็จ'));
     }
   };
 

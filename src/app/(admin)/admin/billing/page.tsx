@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { QueryErrorState } from '@/components/shared/QueryErrorState';
+import { getErrorMessage } from '@/lib/api/live/http/normalizeError';
 
 export default function AdminBillingPage() {
   return (
@@ -48,7 +49,7 @@ function BillingContent() {
       toast.success(`ปิดโต๊ะ ${closingSession.tableNumber} แล้ว`);
       setClosingSession(null);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'ปิดโต๊ะไม่สำเร็จ');
+      toast.error(getErrorMessage(e, 'ปิดโต๊ะไม่สำเร็จ'));
     }
   };
 
@@ -136,7 +137,7 @@ function BillDetailDialog({
       await settleShare.mutateAsync({ shareId, method: 'cash' });
       toast.success('บันทึกการชำระเงินสดแล้ว');
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'บันทึกการชำระเงินไม่สำเร็จ');
+      toast.error(getErrorMessage(e, 'บันทึกการชำระเงินไม่สำเร็จ'));
     }
   };
 

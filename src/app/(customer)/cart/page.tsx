@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { QueryErrorState } from '@/components/shared/QueryErrorState';
 import { formatTHB } from '@/lib/billing/money';
 import { Minus, Plus, Trash2 } from 'lucide-react';
+import { getErrorMessage } from '@/lib/api/live/http/normalizeError';
 
 export default function CartPage() {
   const router = useRouter();
@@ -24,7 +25,7 @@ export default function CartPage() {
       toast.success('ส่งออเดอร์แล้ว');
       router.push('/orders');
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'ส่งออเดอร์ไม่สำเร็จ');
+      toast.error(getErrorMessage(e, 'ส่งออเดอร์ไม่สำเร็จ'));
     } finally {
       setSubmitting(false);
     }

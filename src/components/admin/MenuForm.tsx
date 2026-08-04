@@ -17,6 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
+import { getErrorMessage } from '@/lib/api/live/http/normalizeError';
 
 const DESCRIPTION_MAX = 300;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -113,7 +114,7 @@ export function MenuForm({ initial, onSubmit, onCancel, submitLabel }: MenuFormP
       setValue('imageUrl', url, { shouldValidate: true });
       toast.success('อัปโหลดรูปแล้ว');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'อัปโหลดรูปไม่สำเร็จ');
+      toast.error(getErrorMessage(err, 'อัปโหลดรูปไม่สำเร็จ'));
     }
   };
 

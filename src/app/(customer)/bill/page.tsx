@@ -11,6 +11,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { QueryErrorState } from '@/components/shared/QueryErrorState';
 import { formatTHB } from '@/lib/billing/money';
 import type { PaymentMethodCode, SplitMethod } from '@/lib/types';
+import { getErrorMessage } from '@/lib/api/live/http/normalizeError';
 
 export default function BillPage() {
   const { memberId } = useSessionStore();
@@ -41,7 +42,7 @@ export default function BillPage() {
       await issueBill(splitMethod, splitMethod === 'single_payer' ? (memberId ?? undefined) : undefined);
       toast.success('ออกบิลแล้ว');
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'ออกบิลไม่สำเร็จ — อาจมีบิลค้างชำระอยู่แล้ว หรือยังไม่มีรายการที่คิดเงินได้');
+      toast.error(getErrorMessage(e, 'ออกบิลไม่สำเร็จ — อาจมีบิลค้างชำระอยู่แล้ว หรือยังไม่มีรายการที่คิดเงินได้'));
     } finally {
       setIssuing(false);
     }
@@ -53,7 +54,7 @@ export default function BillPage() {
       await payShare(billShareId, method);
       toast.success(method === 'cash' ? 'แจ้งชำระเงินสดแล้ว รอพนักงานยืนยัน' : 'แจ้งชำระแล้ว รอพนักงานยืนยัน');
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'แจ้งชำระเงินไม่สำเร็จ');
+      toast.error(getErrorMessage(e, 'แจ้งชำระเงินไม่สำเร็จ'));
     } finally {
       setPayingShareId(null);
     }

@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { MenuCategory } from '@/lib/types';
+import { getErrorMessage } from '@/lib/api/live/http/normalizeError';
 
 export default function AdminCategoriesPage() {
   return (
@@ -37,7 +38,7 @@ function CategoriesContent() {
       setName('');
       toast.success('เพิ่มหมวดหมู่แล้ว');
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'เพิ่มหมวดหมู่ไม่สำเร็จ');
+      toast.error(getErrorMessage(e, 'เพิ่มหมวดหมู่ไม่สำเร็จ'));
     }
   };
 
@@ -45,7 +46,7 @@ function CategoriesContent() {
     try {
       await updateCategory.mutateAsync({ id, input: { isActive } });
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'บันทึกไม่สำเร็จ');
+      toast.error(getErrorMessage(e, 'บันทึกไม่สำเร็จ'));
     }
   };
 
@@ -54,7 +55,7 @@ function CategoriesContent() {
       await deleteCategory.mutateAsync(id);
       toast.success(`ลบหมวดหมู่ "${categoryName}" แล้ว`);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'ลบไม่สำเร็จ — อาจยังมีเมนูอยู่ในหมวดนี้');
+      toast.error(getErrorMessage(e, 'ลบไม่สำเร็จ — อาจยังมีเมนูอยู่ในหมวดนี้'));
     }
   };
 
@@ -73,7 +74,7 @@ function CategoriesContent() {
         updateCategory.mutateAsync({ id: neighbor.id, input: { sortOrder: category.sortOrder } }),
       ]);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'จัดลำดับไม่สำเร็จ');
+      toast.error(getErrorMessage(e, 'จัดลำดับไม่สำเร็จ'));
     }
   };
 

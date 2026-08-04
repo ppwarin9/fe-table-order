@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatTHB } from '@/lib/billing/money';
 import { Minus, Plus, ChevronLeft } from 'lucide-react';
+import { getErrorMessage } from '@/lib/api/live/http/normalizeError';
 
 export default function MenuItemDetailPage() {
   const params = useParams<{ itemId: string }>();
@@ -50,7 +51,7 @@ export default function MenuItemDetailPage() {
       toast.success('เพิ่มลงตะกร้าแล้ว');
       router.push('/menu');
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'เพิ่มลงตะกร้าไม่สำเร็จ');
+      toast.error(getErrorMessage(e, 'เพิ่มลงตะกร้าไม่สำเร็จ'));
     } finally {
       setSubmitting(false);
     }

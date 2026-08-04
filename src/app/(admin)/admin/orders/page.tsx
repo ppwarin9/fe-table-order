@@ -13,6 +13,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { QueryErrorState } from '@/components/shared/QueryErrorState';
 import { cn } from '@/lib/utils';
+import { getErrorMessage } from '@/lib/api/live/http/normalizeError';
 
 type Filter = 'active' | 'all';
 
@@ -64,7 +65,7 @@ export default function AdminOrdersPage() {
     try {
       await updateStatus.mutateAsync({ orderItemId: item.id, status: next });
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'บันทึกสถานะไม่สำเร็จ');
+      toast.error(getErrorMessage(e, 'บันทึกสถานะไม่สำเร็จ'));
     } finally {
       setBusyItemIds((prev) => {
         const next = new Set(prev);

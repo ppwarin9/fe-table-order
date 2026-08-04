@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { QueryErrorState } from '@/components/shared/QueryErrorState';
 import { env } from '@/config/env';
+import { getErrorMessage } from '@/lib/api/live/http/normalizeError';
 
 export default function AdminTablesPage() {
   return (
@@ -45,7 +46,7 @@ function TablesContent() {
       setNewNumber('');
       toast.success('เพิ่มโต๊ะแล้ว');
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'เพิ่มโต๊ะไม่สำเร็จ');
+      toast.error(getErrorMessage(e, 'เพิ่มโต๊ะไม่สำเร็จ'));
     }
   };
 
@@ -54,7 +55,7 @@ function TablesContent() {
       await deleteTable.mutateAsync(table.id);
       toast.success(`ลบโต๊ะ ${table.tableNumber} แล้ว`);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'ลบโต๊ะไม่สำเร็จ — โต๊ะนี้อาจมี session อยู่');
+      toast.error(getErrorMessage(e, 'ลบโต๊ะไม่สำเร็จ — โต๊ะนี้อาจมี session อยู่'));
     }
   };
 
@@ -64,7 +65,7 @@ function TablesContent() {
       setQrTable(updated);
       toast.success('สร้าง QR ใหม่แล้ว — QR เดิมใช้ไม่ได้อีกต่อไป');
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'สร้าง QR ใหม่ไม่สำเร็จ');
+      toast.error(getErrorMessage(e, 'สร้าง QR ใหม่ไม่สำเร็จ'));
     }
   };
 

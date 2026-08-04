@@ -22,6 +22,7 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { QueryErrorState } from '@/components/shared/QueryErrorState';
+import { getErrorMessage } from '@/lib/api/live/http/normalizeError';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -124,7 +125,7 @@ function StaffTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
       }
       setFormOpen(false);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'บันทึกไม่สำเร็จ');
+      toast.error(getErrorMessage(e, 'บันทึกไม่สำเร็จ'));
     }
   };
 
@@ -132,7 +133,7 @@ function StaffTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
     try {
       await updateStaff.mutateAsync({ id: staff.id, input: { isActive } });
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'บันทึกไม่สำเร็จ');
+      toast.error(getErrorMessage(e, 'บันทึกไม่สำเร็จ'));
     }
   };
 
@@ -143,7 +144,7 @@ function StaffTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
       toast.success(`ลบ "${deletingStaff.name}" แล้ว`);
       setDeletingStaff(null);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'ลบไม่สำเร็จ');
+      toast.error(getErrorMessage(e, 'ลบไม่สำเร็จ'));
     }
   };
 
@@ -155,7 +156,7 @@ function StaffTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
       setResettingStaff(null);
       setResetValue('');
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'รีเซ็ตรหัสผ่านไม่สำเร็จ');
+      toast.error(getErrorMessage(e, 'รีเซ็ตรหัสผ่านไม่สำเร็จ'));
     }
   };
 
@@ -322,7 +323,7 @@ function RolesTab() {
       toast.success('บันทึกแล้ว');
       setEditingRole(null);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'บันทึกไม่สำเร็จ');
+      toast.error(getErrorMessage(e, 'บันทึกไม่สำเร็จ'));
     }
   };
 

@@ -49,3 +49,22 @@ export function normalizeAxiosError(error: unknown): AppError {
     raw: error,
   };
 }
+
+export function isAppError(error: unknown): error is AppError {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'message' in error &&
+    'status' in error &&
+    'isNetworkError' in error
+  );
+}
+
+// Every api.* rejection is an AppError (see normalizeAxiosError above), never a bare
+// Error — `e instanceof Error` never matches it, so a naive `e instanceof Error ?
+// e.message : fallback` always shows the fallback and hides the real backend message.
+export function getErrorMessage(error: unknown, fallback: string): string {
+  if (isAppError(error)) return error.message;
+  if (error instanceof Error) return error.message;
+  return fallback;
+}

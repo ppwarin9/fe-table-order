@@ -24,6 +24,7 @@ import { useChangeOwnPassword } from '@/hooks/mutations/useAdminStaffMutations';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { getErrorMessage } from '@/lib/api/live/http/normalizeError';
 
 interface NavLink {
   href: string;
@@ -65,7 +66,7 @@ export function Sidebar() {
       setCurrentPassword('');
       setNewPassword('');
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'เปลี่ยนรหัสผ่านไม่สำเร็จ');
+      toast.error(getErrorMessage(e, 'เปลี่ยนรหัสผ่านไม่สำเร็จ'));
     }
   };
 

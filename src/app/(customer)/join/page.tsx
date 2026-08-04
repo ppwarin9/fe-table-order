@@ -7,11 +7,7 @@ import { liffService } from '@/lib/liff';
 import { useSessionStore } from '@/stores/sessionStore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import type { AppError } from '@/lib/api/live/http/normalizeError';
-
-function isAppError(e: unknown): e is AppError {
-  return typeof e === 'object' && e !== null && 'status' in e;
-}
+import { getErrorMessage, isAppError } from '@/lib/api/live/http/normalizeError';
 
 function JoinContent() {
   const router = useRouter();
@@ -44,7 +40,7 @@ function JoinContent() {
         if (isAppError(e) && e.status === 401) {
           setNeedsRelogin(true);
         } else {
-          setError((e as Error).message);
+          setError(getErrorMessage(e, 'เข้าร่วมโต๊ะไม่สำเร็จ'));
         }
       }
     })();
